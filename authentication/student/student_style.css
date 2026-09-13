@@ -1,0 +1,460 @@
+/* ==========================================================================
+   Global Theme Design System & CSS Variables
+   ========================================================================== */
+:root {
+    --navy-primary: #1e293b;
+    --navy-dark: #0f172a;
+    --amber-accent: #f59e0b;
+    --amber-hover: #d97706;
+    --green-success: #10b981;
+    --green-dark: #065f46;
+    --blue-info: #3b82f6;
+    --red-alert: #ef4444;
+    --red-hover: #dc2626;
+    --bg-neutral: #f8fafc;
+    --card-bg: #ffffff;
+    --border-color: #cbd5e1;
+    --text-dark: #334155;
+    --text-muted: #64748b;
+    --font-stack: 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, Helvetica, Arial, sans-serif;
+}
+
+/* ==========================================================================
+   Global Resets & Base Typography
+   ========================================================================== */
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    font-family: var(--font-stack);
+    background-color: var(--bg-neutral);
+    color: var(--text-dark);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 30px 20px;
+    text-align: center;
+}
+
+h1, h2, h3 {
+    color: var(--navy-primary);
+    font-weight: 700;
+    letter-spacing: -0.025em;
+}
+
+h1 {
+    font-size: 1.75rem;
+    margin-bottom: 12px;
+}
+
+h2 {
+    font-size: 1.5rem;
+    margin-bottom: 20px;
+}
+
+h3 {
+    font-size: 1.25rem;
+    margin-bottom: 16px;
+}
+
+/* Clean up outdated HTML break lines */
+br {
+    display: none;
+}
+
+hr {
+    border: 0;
+    height: 1px;
+    background-color: var(--border-color);
+    margin: 20px 0;
+}
+
+/* ==========================================================================
+   Card Layout Containers (Forms, Profiles, Dashboards, Confirmations)
+   ========================================================================== */
+.card-container,
+.form-card,
+.profile-card,
+.dashboard-card,
+.login-container,
+.auth-card {
+    background-color: var(--card-bg);
+    width: 100%;
+    max-width: 500px;
+    padding: 32px;
+    border-radius: 12px;
+    border: 1px solid var(--border-color);
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+    margin: 0 auto 20px auto;
+    text-align: left;
+}
+
+/* Special alignment override for pure confirmation prompts */
+body > h2,
+body > p,
+body > form,
+body > h3 {
+    max-width: 480px;
+    width: 100%;
+}
+ 
+/* ==========================================================================
+   Form Controls & Elements
+   ========================================================================== */
+.form-group {
+    margin-bottom: 18px;
+}
+
+label {
+    display: block;
+    font-size: 0.8125rem;
+    font-weight: 600;
+    color: var(--navy-primary);
+    margin-bottom: 6px;
+    margin-top: 14px;
+    text-transform: uppercase;
+    letter-spacing: 0.025em;
+}
+
+label:first-of-type {
+    margin-top: 0;
+}
+
+input[type="text"],
+input[type="email"],
+input[type="password"],
+input[type="date"],
+textarea {
+    width: 100%;
+    padding: 10px 14px;
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    font-family: var(--font-stack);
+    font-size: 0.9375rem;
+    color: var(--text-dark);
+    background-color: #ffffff;
+    outline: none;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+textarea {
+    min-height: 110px;
+    resize: vertical;
+    line-height: 1.5;
+}
+
+input[type="text"]:focus,
+input[type="email"]:focus,
+input[type="password"]:focus,
+input[type="date"]:focus,
+textarea:focus {
+    border-color: var(--navy-primary);
+    box-shadow: 0 0 0 3px rgba(30, 41, 59, 0.15);
+}
+
+/* File Upload Controls */
+input[type="file"] {
+    width: 100%;
+    font-size: 0.875rem;
+    color: var(--text-muted);
+    padding: 8px;
+    border: 1px dashed var(--border-color);
+    border-radius: 6px;
+    background-color: #f1f5f9;
+    cursor: pointer;
+}
+
+input[type="file"]::file-selector-button {
+    background-color: var(--navy-primary);
+    color: #ffffff;
+    border: none;
+    padding: 6px 12px;
+    border-radius: 4px;
+    font-weight: 600;
+    font-size: 0.8125rem;
+    margin-right: 10px;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+
+input[type="file"]::file-selector-button:hover {
+    background-color: var(--navy-dark);
+}
+
+/* Standardized Buttons */
+button,
+input[type="submit"],
+.btn {
+    display: inline-block;
+    padding: 10px 18px;
+    font-family: var(--font-stack);
+    font-size: 0.9375rem;
+    font-weight: 600;
+    border-radius: 6px;
+    border: none;
+    cursor: pointer;
+    text-decoration: none;
+    text-align: center;
+    transition: background-color 0.2s ease, transform 0.1s ease;
+}
+
+button:active,
+input[type="submit"]:active,
+.btn:active {
+    transform: scale(0.98);
+}
+
+button[type="submit"],
+input[type="submit"],
+.btn-primary,
+.btn-edit {
+    background-color: var(--navy-primary);
+    color: #ffffff;
+    width: 100%;
+    margin-top: 10px;
+}
+
+button[type="submit"]:hover,
+input[type="submit"]:hover,
+.btn-primary:hover,
+.btn-edit:hover {
+    background-color: var(--navy-dark);
+}
+
+/* Destructive Action Buttons */
+button[name="confirm_delete"],
+.btn-delete {
+    background-color: var(--red-alert);
+    color: #ffffff;
+}
+
+button[name="confirm_delete"]:hover,
+.btn-delete:hover {
+    background-color: var(--red-hover);
+    box-shadow: 0 2px 4px rgba(239, 68, 68, 0.25);
+}
+
+/* Cancel / Secondary Action Buttons */
+button[name="cancel"],
+.btn-secondary {
+    background-color: #e2e8f0;
+    color: var(--navy-primary);
+}
+
+button[name="cancel"]:hover,
+.btn-secondary:hover {
+    background-color: var(--border-color);
+}
+
+/* Inline form layout for simple action groups */
+form:has(button[name="confirm_delete"]) {
+    display: flex;
+    justify-content: center;
+    gap: 12px;
+}
+
+/* ==========================================================================
+   Data Tables & My Reports Formatting
+   ========================================================================== */
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 24px;
+    text-align: center;
+    background-color: #ffffff;
+    border-radius: 8px;
+    overflow: hidden;
+    border: 1px solid var(--border-color);
+}
+
+th, td {
+    padding: 12px;
+    border: 1px solid var(--border-color);
+    font-size: 0.875rem;
+}
+
+th {
+    background-color: #f1f5f9;
+    color: var(--navy-primary);
+    font-weight: 700;
+}
+
+/* Table overrides inside Profile Card */
+.profile-card table {
+    text-align: left;
+}
+
+.profile-card table td:first-child {
+    font-weight: 600;
+    color: var(--navy-primary);
+    width: 40%;
+    background-color: #f8fafc;
+    text-transform: uppercase;
+    font-size: 0.75rem;
+    letter-spacing: 0.025em;
+}
+
+/* Image Thumbnails in Tables & Forms */
+table img,
+form img {
+    border-radius: 6px;
+    object-fit: cover;
+    border: 1px solid var(--border-color);
+}
+
+/* Profile Picture & Live Preview Frames */
+.img-preview-container,
+.profile-img-container {
+    text-align: center;
+    margin: 12px 0 20px 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.profile-img,
+.profile-img-preview {
+    width: 130px;
+    height: 130px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 3px solid var(--navy-primary);
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    transition: transform 0.2s ease;
+}
+
+.profile-img:hover,
+.profile-img-preview:hover {
+    transform: scale(1.02);
+}
+
+/* ==========================================================================
+   Alerts, Messages, & Notifications
+   ========================================================================== */
+.alert,
+.message,
+p[style*="color: red"],
+p[style*="color:red"] {
+    background-color: #fef2f2;
+    color: var(--red-alert) !important;
+    border: 1px solid #fecaca;
+    border-left: 4px solid var(--red-alert);
+    padding: 12px 16px;
+    border-radius: 6px;
+    font-size: 0.875rem;
+    margin-bottom: 20px;
+    text-align: left;
+}
+
+.alert-success {
+    background-color: #ecfdf5;
+    border-left: 4px solid var(--green-success);
+    color: var(--green-dark);
+}
+
+/* Notification Box Styling */
+.notif-box {
+    background-color: #e0f2fe;
+    border-left: 5px solid var(--blue-info);
+    padding: 14px 18px;
+    margin-bottom: 25px;
+    border-radius: 6px;
+    text-align: left;
+}
+
+.notif-box ul {
+    margin-left: 18px;
+    padding: 0;
+}
+
+.notif-box li {
+    margin-bottom: 6px;
+    font-size: 0.9rem;
+}
+
+/* Highlighted preview text box for confirmations */
+body > p {
+    background-color: var(--card-bg);
+    border: 1px solid var(--border-color);
+    padding: 16px;
+    border-radius: 8px;
+    font-size: 0.9375rem;
+    color: var(--text-dark);
+    margin-bottom: 24px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+/* ==========================================================================
+   Navigation Links & Dashboard Styling
+   ========================================================================== */
+a {
+    color: var(--navy-primary);
+    font-weight: 600;
+    text-decoration: none;
+    transition: color 0.2s ease;
+}
+
+a:hover {
+    color: var(--amber-hover);
+    text-decoration: underline;
+}
+
+.btn-back,
+a[href="my_reports.php"],
+a[href="student_dashboard.php"] {
+    display: inline-block;
+    padding: 10px 18px;
+    background-color: var(--navy-primary);
+    color: #ffffff !important;
+    text-decoration: none;
+    font-size: 0.875rem;
+    font-weight: 600;
+    border-radius: 6px;
+    margin-top: 16px;
+    transition: background-color 0.2s ease;
+}
+
+.btn-back:hover,
+a[href="my_reports.php"]:hover,
+a[href="student_dashboard.php"]:hover {
+    background-color: var(--navy-dark);
+    text-decoration: none;
+}
+
+/* Dashboard Action Menu Specifics */
+.dashboard-card ul {
+    list-style-type: none;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.dashboard-card li a {
+    display: block;
+    width: 100%;
+    background-color: var(--navy-primary);
+    color: #ffffff;
+    padding: 12px;
+    border-radius: 6px;
+    text-align: center;
+}
+
+.dashboard-card li a:hover {
+    background-color: var(--navy-dark);
+}
+
+.dashboard-card li a.logout-btn {
+    background-color: #fee2e2;
+    color: var(--red-alert);
+}
+
+.dashboard-card li a.logout-btn:hover {
+    background-color: #fca5a5;
+    color: #991b1b;
+}
