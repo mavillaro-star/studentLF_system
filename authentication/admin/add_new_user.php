@@ -1,7 +1,11 @@
-```php
 <?php
 session_start();
 include '../../db.php';
+
+if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'admin') {
+    header("Location: ../login.php");
+    exit();
+}
 
 function returnBytes(string $val): int {
     $val = trim($val);
@@ -268,6 +272,24 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
 }
 
 $fullname = $_SESSION['fullname'] ?? 'Admin';
+
+$lost_count = 0;
+$found_count = 0;
+$modals = [];
+
+$lost_result = mysqli_query($conn, "SELECT COUNT(*) AS total FROM lost_items");
+
+if ($lost_result) {
+    $lost_data = mysqli_fetch_assoc($lost_result);
+    $lost_count = (int)($lost_data['total'] ?? 0);
+}
+
+$found_result = mysqli_query($conn, "SELECT COUNT(*) AS total FROM found_items");
+
+if ($found_result) {
+    $found_data = mysqli_fetch_assoc($found_result);
+    $found_count = (int)($found_data['total'] ?? 0);
+}
 ?>
 
 <!DOCTYPE html>
@@ -688,10 +710,13 @@ input[type="file"].form-control {
 
 </style>
 
+    <link rel="stylesheet" href="../../responsive.css">
 </head>
 
-
-<body>
+<body class="admin-sidebar-page">
+<input type="checkbox" id="admin-menu-toggle" aria-label="Toggle navigation menu">
+<label class="mobile-sidebar-toggle" for="admin-menu-toggle" aria-label="Toggle navigation menu">☰</label>
+<label class="mobile-sidebar-overlay" for="admin-menu-toggle" aria-hidden="true"></label>
 
 <div class="dashboard-wrapper">
 
@@ -710,7 +735,6 @@ input[type="file"].form-control {
 
     </div>
 
-
     <nav class="navigation">
 
         <a
@@ -721,63 +745,66 @@ input[type="file"].form-control {
             <span>Dashboard</span>
         </a>
 
-
         <a
             href="manage_users.php"
             class="nav-item active"
         >
-            <span class="nav-icon">👥</span>
+            <span class="nav-icon">♙</span>
             <span>Manage Users</span>
         </a>
 
-
-        <a
-            href="view_lost.php"
+        <a href="view_lost.php"
             class="nav-item"
         >
-            <span class="nav-icon">📄</span>
+            <span class="nav-icon">▣</span>
             <span>Lost Item Reports</span>
-        </a>
 
+                <?php if ($lost_count > 0): ?>
+                    <span class="nav-count">
+                        <?php echo $lost_count; ?>
+                    </span>
+                <?php endif; ?>
+        </a>
 
         <a
             href="view_found.php"
             class="nav-item"
         >
-            <span class="nav-icon">🔎</span>
+            <span class="nav-icon">⌕</span>
             <span>Found Item Reports</span>
-        </a>
 
+                <?php if ($found_count > 0): ?>
+                    <span class="nav-count">
+                        <?php echo $found_count; ?>
+                    </span>
+                <?php endif; ?>
+        </a>
 
         <a
             href="admin_profile.php"
             class="nav-item"
         >
-            <span class="nav-icon">👤</span>
+            <span class="nav-icon">○</span>
             <span>My Profile</span>
         </a>
 
     </nav>
 
-
     <div class="sidebar-bottom">
+            <a href="../../authentication/logout.php"
+               class="nav-item"
+               onclick="return confirmLogout();">
 
-        <a
-            href="logout.php"
-            class="logout-link"
-        >
-            <span>↪</span>
-            <span>Log Out</span>
-        </a>
+                <span class="nav-icon">↪</span>
+                <span>Log Out</span>
 
-    </div>
-
+            </a>
+        </div>
 </aside>
 
 <main class="main-content">
 
     <div class="form-content">
-
 
         <?php if (!empty($message)): ?>
 
@@ -803,9 +830,7 @@ input[type="file"].form-control {
 
         <?php endif; ?>
 
-
         <div class="form-card">
-
 
             <div class="form-title">
 
@@ -819,15 +844,12 @@ input[type="file"].form-control {
 
             </div>
 
-
             <form
                 method="POST"
                 enctype="multipart/form-data"
             >
 
-
                 <div class="form-grid">
-
 
                     <div class="form-group">
 
@@ -845,7 +867,6 @@ input[type="file"].form-control {
                         >
 
                     </div>
-
 
                     <div class="form-group">
 
@@ -865,7 +886,6 @@ input[type="file"].form-control {
 
                     </div>
 
-
                     <div class="form-group">
 
                         <label for="password">
@@ -882,7 +902,6 @@ input[type="file"].form-control {
                         >
 
                     </div>
-
 
                     <div class="form-group">
 
@@ -917,7 +936,6 @@ input[type="file"].form-control {
                         </select>
 
                     </div>
-
 
                     <div class="form-group">
 
@@ -973,7 +991,6 @@ input[type="file"].form-control {
 
                     </div>
 
-
                     <div class="form-group">
 
                         <label for="year_level">
@@ -1022,7 +1039,6 @@ input[type="file"].form-control {
 
                     </div>
 
-
                     <div class="form-group">
 
                         <label for="contact_number">
@@ -1039,7 +1055,6 @@ input[type="file"].form-control {
                         >
 
                     </div>
-
 
                     <div class="form-group">
 
@@ -1068,7 +1083,6 @@ input[type="file"].form-control {
                         Register User
                     </button>
 
-
                     <a
                         href="manage_users.php"
                         class="btn-cancel"
@@ -1078,18 +1092,20 @@ input[type="file"].form-control {
 
                 </div>
 
-
             </form>
-
 
         </div>
 
     </div>
 
 </main>
-
 </div>
+
+ <script>
+function confirmLogout() {
+    return confirm("Are you sure you want to log out?");
+}
+</script>
 
 </body>
 </html>
-```

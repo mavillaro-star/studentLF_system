@@ -1,550 +1,753 @@
 <?php
 session_start();
 
-// Redirect to login if user is not authenticated
 if (!isset($_SESSION['user_id'])) {
     header("Location: ../login.php");
     exit();
 }
 
-// Redirect if role is not student
-if ($_SESSION['role'] != "student") {
+if (!isset($_SESSION['role']) || $_SESSION['role'] != "student") {
     header("Location: ../login.php");
     exit();
 }
 
-$fullname = $_SESSION['fullname'];
+header("Cache-Control: no-store, no-cache, must-revalidate, max-age=0");
+header("Pragma: no-cache");
+header("Expires: 0");
+
+$fullname = $_SESSION['fullname'] ?? 'Student';
 ?>
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Student Dashboard</title>
+
+    <title>Student Dashboard - Lost &amp; Found</title>
+
     <style>
-        /* Base Reset */
+
+
         * {
-            box-sizing: border-box;
             margin: 0;
             padding: 0;
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            box-sizing: border-box;
+            font-family:Arial, Helvetica, sans-serif;
+        }
+
+        :root {
+            --primary: #4da3ff;
+            --bg-surface: #ffffff;
+            --border-color: #e3e8ee;
+            --text-main: #172033;
+            --text-muted: #8793a5;
+            --text-light: #9aa5b4;
+            --background: #f3f6fa;
+            --radius-sm: 8px;
+            --radius-md: 12px;
+            --radius-lg: 15px;
+            --transition: .2s ease;
+        }
+
+        html,
+        body {
+            width: 100%;
+            min-height: 100%;
         }
 
         body {
-            background-color: #eaf0f6;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-            padding: 30px 20px;
+            background: var(--background);
+            color: var(--text-main);
+            overflow-x: hidden;
+        }
+        #menu-toggle {
+            display: none;
         }
 
-        /* Outer Dashboard Container */
-        .dashboard-container {
+        .dashboard-wrapper {
             display: flex;
             width: 100%;
-            max-width: 1100px;
-            background-color: #ffffff;
-            border-radius: 20px;
-            padding: 16px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.03);
-            gap: 20px;
+            min-height: 100vh;
         }
 
-        /* Sidebar Styling */
         .sidebar {
-            width: 220px;
-            background-color: #172033;
-            border-radius: 16px;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 230px;
+            height: 100vh;
             padding: 24px 16px;
+            background: #111a2d;
+            color: #ffffff;
             display: flex;
             flex-direction: column;
-            color: #ffffff;
-            flex-shrink: 0;
+            border-right: 1px solid #1f2b43;
+            overflow-y: auto;
+            z-index: 200;
         }
 
-        .logo-box {
-            background-color: #26334d;
-            width: 52px;
-            height: 52px;
-            border-radius: 14px;
+        .sidebar-brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 2px 8px 25px;
+            margin-bottom: 22px;
+            border-bottom: 1px solid #26334c;
+            text-decoration: none;
+            color: #ffffff;
+        }
+
+        .brand-icon {
+            width: 42px;
+            height: 42px;
+            flex-shrink: 0;
+            border-radius: 12px;
+            background: #2563eb;
             display: flex;
             align-items: center;
             justify-content: center;
-            margin: 0 auto 12px auto;
-        }
-
-        .logo-icon {
-            width: 24px;
-            height: 24px;
-            fill: #8a99ad;
-        }
-
-        .brand-title {
-            font-size: 13px;
-            font-weight: 700;
             color: #ffffff;
-            text-transform: uppercase;
-            letter-spacing: 0.8px;
-            text-align: center;
-            padding-bottom: 16px;
-            margin-bottom: 16px;
-            border-bottom: 1px solid #26334d;
+            font-size: 13px;
+            font-weight: 800;
+            letter-spacing: 1px;
         }
 
-        .nav-menu {
+        .brand-text {
             display: flex;
             flex-direction: column;
-            gap: 8px;
-            flex-grow: 1;
-            list-style: none;
+            min-width: 0;
+        }
+
+        .brand-text strong {
+            font-size: 13px;
+            letter-spacing: 1px;
+            color: #ffffff;
+        }
+
+        .brand-text span {
+            font-size: 10px;
+            color: #75839b;
+            margin-top: 3px;
+            letter-spacing: .5px;
+        }
+
+        .nav-title {
+            font-size: 9px;
+            text-transform: uppercase;
+            color: #64728a;
+            letter-spacing: 1.3px;
+            padding: 0 10px;
+            margin-bottom: 9px;
+        }
+
+        .navigation {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
         }
 
         .nav-item {
+            min-height: 44px;
             display: flex;
             align-items: center;
-            gap: 10px;
-            color: #a3b1c2;
-            text-decoration: none;
-            font-size: 13px;
-            font-weight: 500;
-            padding: 10px 14px;
+            gap: 12px;
+            padding: 0 12px;
             border-radius: 10px;
-            transition: all 0.2s ease;
+            text-decoration: none;
+            color: #91a0b8;
+            font-size: 12px;
+            font-weight: 500;
+            transition: .2s ease;
+            position: relative;
+        }
+
+        .nav-icon {
+            width: 27px;
+            height: 27px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #19253c;
+            font-size: 14px;
+            flex-shrink: 0;
         }
 
         .nav-item:hover {
             color: #ffffff;
-            background-color: #212c42;
+            background: #18243a;
+        }
+
+        .nav-item:hover .nav-icon {
+            background: #223352;
         }
 
         .nav-item.active {
             color: #ffffff;
-            background-color: #34435e;
+            background: #1c2b47;
         }
 
-        .nav-item.nav-lost { color: #ff6b6b; }
-        .nav-item.nav-found { color: #20c997; }
+        .nav-item.active::before {
+            content: "";
+            position: absolute;
+            left: 0;
+            width: 3px;
+            height: 22px;
+            border-radius: 0 5px 5px 0;
+            background: #4da3ff;
+        }
 
-        .logout {
+        .nav-item.active .nav-icon {
+            background: #2468a9;
+            color: #ffffff;
+        }
+
+        .nav-lost .nav-icon {
+            color: #ff7676;
+        }
+
+        .nav-found .nav-icon {
+            color: #35d39a;
+        }
+
+        .sidebar-bottom {
             margin-top: auto;
-            border-top: 1px solid #26334d;
-            padding-top: 16px;
+            padding-top: 15px;
+            border-top: 1px solid #26334c;
         }
 
-        /* Main Content Styling */
-        .main-content {
+        .sidebar-bottom .nav-item:hover {
+            background: #241d2a;
+            color: #ff7f7f;
+        }
+        .mobile-menu-btn {
+            display: none;
+            width: 38px;
+            height: 38px;
+            border: 1px solid #e2e7ed;
+            border-radius: 10px;
+            background: #ffffff;
+            cursor: pointer;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            gap: 4px;
+            flex-shrink: 0;
+        }
+
+        .mobile-menu-btn span {
+            width: 17px;
+            height: 2px;
+            background: #172033;
+            border-radius: 5px;
+        }
+
+        .menu-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(8, 15, 28, .45);
+            opacity: 0;
+            visibility: hidden;
+            transition: .25s ease;
+            z-index: 150;
+            cursor: pointer;
+        }
+
+    
+        .main-wrapper {
             flex-grow: 1;
             display: flex;
             flex-direction: column;
-            gap: 16px;
+            min-width: 0;
+            width: calc(100% - 230px);
+            min-height: 100vh;
+            margin-left: 230px;
         }
 
-        .header {
+        .top-header {
+            min-height: 74px;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 4px 8px;
+            gap: 15px;
+            padding: 12px 30px;
+            background: var(--bg-surface);
+            border-bottom: 1px solid var(--border-color);
+            position: sticky;
+            top: 0;
+            z-index: 50;
         }
 
-        .page-title {
-            font-size: 18px;
-            font-weight: 700;
-            color: #111827;
-        }
-
-        .user-profile {
+        .header-left {
             display: flex;
             align-items: center;
-            gap: 10px;
+            gap: 12px;
+            min-width: 0;
         }
 
-        .avatar {
-            width: 34px;
-            height: 34px;
-            border-radius: 50%;
-            background-color: #3b82f6;
-            color: #ffffff;
+        .header-title {
+            min-width: 0;
+        }
+
+        .header-title h1 {
+            font-size: 19px;
+            font-weight: 750;
+            color: var(--text-main);
+            line-height: 1.4;
+        }
+
+        .header-title p {
+            font-size: 11px;
+            color: var(--text-muted);
+            margin-top: 3px;
+        }
+
+        .user-nav-actions {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            flex-shrink: 0;
+        }
+
+        .badge-btn {
+            width: 35px;
+            height: 35px;
+            border-radius: 10px;
+            border: 1px solid var(--border-color);
+            background: #ffffff;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-weight: 600;
+            cursor: pointer;
+            color: var(--text-muted);
             font-size: 14px;
         }
 
-        .user-info {
+        .content-body {
+            padding: 32px 36px;
             display: flex;
             flex-direction: column;
-            text-align: right;
-        }
-
-        .user-name {
-            font-size: 13px;
-            font-weight: 700;
-            color: #111827;
-            line-height: 1.2;
-        }
-
-        .user-role {
-            font-size: 11px;
-            color: #8a99ad;
-        }
-
-        /* Inner Content Panel */
-        .content-display {
+            gap: 28px;
             width: 100%;
-            border-radius: 16px;
-            background-color: #f7fafc;
-            padding: 20px;
-            border: 1px solid #edf2f7;
+        }
+
+        .section-title-wrapper {
             display: flex;
-            flex-direction: column;
-            gap: 20px;
-        }
-
-        .welcome-banner {
-            background-color: #172033;
-            color: #ffffff;
-            padding: 24px 28px;
-            border-radius: 14px;
-            display: flex;
-            flex-direction: column;
-            gap: 16px;
-        }
-
-        .banner-text h2 {
-            font-size: 18px;
-            font-weight: 700;
-            margin-bottom: 6px;
-        }
-
-        .banner-text p {
-            font-size: 12px;
-            color: #a3b1c2;
-        }
-
-        .action-buttons {
-            display: flex;
-            gap: 10px;
-        }
-
-        .btn-action {
-            display: inline-flex;
+            justify-content: space-between;
             align-items: center;
-            background-color: #ff5252;
-            color: #ffffff;
-            padding: 8px 16px;
-            border-radius: 8px;
-            text-decoration: none;
-            font-size: 12px;
-            font-weight: 600;
-        }
-
-        .btn-action-alt {
-            display: inline-flex;
-            align-items: center;
-            background-color: #10b981;
-            color: #ffffff;
-            padding: 8px 16px;
-            border-radius: 8px;
-            text-decoration: none;
-            font-size: 12px;
-            font-weight: 600;
-        }
-
-        .dashboard-grid {
-            display: grid;
-            grid-template-columns: 1fr 260px;
-            gap: 20px;
-        }
-
-        .section-title {
-            font-size: 13px;
-            font-weight: 700;
-            color: #111827;
-            margin-bottom: 10px;
-        }
-
-        /* Stats Cards */
-        .stats-row {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
             gap: 12px;
-            margin-bottom: 20px;
+            margin-bottom: 14px;
         }
 
-        .stat-card {
+        .section-title-wrapper h3 {
+            font-size: 16px;
+            font-weight: 700;
+            color: var(--text-main);
+        }
+
+        .section-title-wrapper span {
+            font-size: 11px;
+            color: var(--text-light);
+        }
+
+        .welcome-panel {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr);
+            align-items: center;
+            gap: 28px;
             background: #ffffff;
-            border-radius: 10px;
-            padding: 16px 10px;
-            text-align: center;
-            border: 1px solid #e5e7eb;
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-lg);
+            padding: 34px;
+            box-shadow: 0 2px 8px rgba(17, 26, 45, .04);
             position: relative;
             overflow: hidden;
         }
 
-        .stat-card::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 3px;
+        .welcome-copy {
+            min-width: 0;
         }
 
-        .stat-card.card-red::before { background-color: #ff5252; }
-        .stat-card.card-orange::before { background-color: #f59e0b; }
-        .stat-card.card-green::before { background-color: #10b981; }
-
-        .stat-num {
-            font-size: 20px;
-            font-weight: 800;
-            color: #111827;
+        .welcome-label {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 16px;
+            color: #2468a9;
+            font-size: 10px;
+            font-weight: 750;
+            letter-spacing: 1.3px;
+            text-transform: uppercase;
         }
 
-        .stat-label {
-            font-size: 11px;
-            color: #6b7280;
-            margin-top: 4px;
+        .welcome-label::before {
+            content: "";
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            background: #4da3ff;
         }
 
-        /* Item Cards */
-        .recent-items-grid {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 12px;
+        .welcome-panel h2 {
+            color: var(--text-main);
+            font-size: clamp(21px, 2.2vw, 27px);
+            line-height: 1.35;
+            margin-bottom: 12px;
+            letter-spacing: -.4px;
         }
 
-        .item-card {
-            background: #ffffff;
-            border-radius: 10px;
-            padding: 12px;
-            border: 1px solid #e5e7eb;
-            text-align: center;
+        .welcome-panel p {
+            max-width: 620px;
+            color: var(--text-muted);
+            font-size: 13px;
+            line-height: 1.8;
         }
 
-        .item-icon {
-            font-size: 24px;
-            background-color: #f3f4f6;
-            height: 64px;
-            border-radius: 8px;
+        .dashboard-note {
+            display: flex;
+            align-items: flex-start;
+            gap: 13px;
+            padding: 17px 19px;
+            border: 1px solid #dce9f8;
+            border-radius: 12px;
+            background: #f7faff;
+            color: #34445d;
+            font-size: 12px;
+            line-height: 1.7;
+        }
+
+        .note-mark {
+            width: 28px;
+            height: 28px;
+            flex-shrink: 0;
             display: flex;
             align-items: center;
             justify-content: center;
-            margin-bottom: 10px;
-        }
-
-        .item-title {
-            font-size: 12px;
+            border-radius: 8px;
+            background: #e2efff;
+            color: #2468a9;
+            font-size: 14px;
             font-weight: 700;
-            color: #111827;
         }
 
-        .item-location {
-            font-size: 10px;
-            color: #6b7280;
-            margin-top: 2px;
+        .dashboard-note strong {
+            display: block;
+            color: var(--text-main);
+            margin-bottom: 2px;
         }
 
-        .badge-found {
-            display: inline-block;
-            background-color: #d1fae5;
-            color: #10b981;
-            font-size: 10px;
-            font-weight: 600;
-            padding: 2px 10px;
-            border-radius: 4px;
-            margin-top: 6px;
-        }
-
-        /* Feed Side Panel */
-        .feed-box {
-            background: #ffffff;
-            border-radius: 12px;
-            padding: 16px;
-            border: 1px solid #e5e7eb;
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-        }
-
-        .feed-item {
-            padding-bottom: 12px;
-            border-bottom: 1px solid #f3f4f6;
-        }
-
-        .feed-item:last-child {
-            border-bottom: none;
-            padding-bottom: 0;
-        }
-
-        .feed-item-title {
-            font-size: 12px;
-            font-weight: 700;
-            color: #111827;
-        }
-
-        .feed-item-desc {
+        .dashboard-footer {
+            margin-top: auto;
+            padding: 18px 36px 22px;
+            color: #8a96a8;
             font-size: 11px;
-            color: #6b7280;
-            margin-top: 2px;
-            line-height: 1.3;
+            border-top: 1px solid #e7ebf1;
         }
 
-        .feed-time {
-            font-size: 10px;
-            color: #9ca3af;
-            margin-top: 4px;
+        /* ==========================================
+           TABLET
+        ========================================== */
+
+        @media screen and (max-width: 1000px) {
+            .sidebar {
+                width: 205px;
+            }
+
+            .main-wrapper {
+                width: calc(100% - 205px);
+                margin-left: 205px;
+            }
+
+            .top-header {
+                padding: 12px 23px;
+            }
+
+            .content-body {
+                padding: 23px;
+            }
+
+            .welcome-panel {
+                padding: 25px;
+                gap: 20px;
+            }
+
+            .dashboard-footer {
+                padding: 18px 23px 20px;
+            }
         }
 
-        @media screen and (max-width: 850px) {
-            .dashboard-container { flex-direction: column; }
-            .sidebar { width: 100%; }
-            .dashboard-grid { grid-template-columns: 1fr; }
+        @media screen and (max-width: 760px) {
+            .dashboard-wrapper {
+                display: block;
+            }
+
+            .sidebar {
+                width: 270px;
+                max-width: 85vw;
+                transform: translateX(-100%);
+                transition: transform .25s ease;
+                box-shadow: 8px 0 25px rgba(0, 0, 0, .18);
+                z-index: 200;
+            }
+
+            #menu-toggle:checked
+            ~ .dashboard-wrapper .sidebar {
+                transform: translateX(0);
+            }
+
+            #menu-toggle:checked
+            ~ .menu-overlay {
+                opacity: 1;
+                visibility: visible;
+            }
+
+            .menu-overlay {
+                display: block;
+            }
+
+            .mobile-menu-btn {
+                display: flex;
+            }
+
+            .main-wrapper {
+                width: 100%;
+                margin-left: 0;
+            }
+
+            .top-header {
+                min-height: 65px;
+                padding: 10px 17px;
+            }
+
+            .header-title h1 {
+                font-size: 16px;
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
+            }
+
+            .header-title p {
+                display: none;
+            }
+
+            .user-nav-actions {
+                gap: 8px;
+            }
+
+            .content-body {
+                padding: 20px 17px 30px;
+                gap: 22px;
+            }
+
+            .welcome-panel {
+                padding: 22px;
+                gap: 20px;
+            }
+
+            .welcome-panel p {
+                font-size: 13px;
+            }
+
+            .dashboard-footer {
+                padding: 16px 17px 20px;
+                text-align: center;
+            }
+        }
+
+        @media screen and (max-width: 430px) {
+            .top-header {
+                padding: 10px 13px;
+                gap: 8px;
+            }
+
+            .header-title h1 {
+                font-size: 14px;
+            }
+
+            .badge-btn {
+                width: 33px;
+                height: 33px;
+            }
+
+            .content-body {
+                padding: 17px 13px 25px;
+            }
+
+            .section-title-wrapper h3 {
+                font-size: 14px;
+            }
+
+            .section-title-wrapper span {
+                font-size: 10px;
+            }
+
+            .welcome-panel {
+                padding: 19px;
+            }
+
+            .welcome-panel h2 {
+                font-size: 18px;
+            }
+
+            .dashboard-note {
+                padding: 13px;
+                font-size: 12px;
+            }
+        }
+
+        @media screen and (max-width: 350px) {
+            .user-nav-actions {
+                gap: 5px;
+            }
+
+            .mobile-menu-btn {
+                width: 34px;
+                height: 34px;
+            }
+
+            .header-left {
+                gap: 7px;
+            }
+
+            .header-title h1 {
+                font-size: 12px;
+            }
+
+            .welcome-panel {
+                padding: 16px;
+            }
+
+            .header-title h1 {
+                max-width: 145px;
+            }
         }
     </style>
+    <link rel="stylesheet" href="../../responsive.css">
 </head>
+
 <body>
+    <input type="checkbox" id="menu-toggle">
 
-<div class="dashboard-container">
-    <aside class="sidebar">
-        <a href="student_dashboard.php" style="text-decoration: none;">
-            <div class="logo-box">
-                <svg class="logo-icon" viewBox="0 0 24 24">
-                    <path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14zM10 7h-1v2H7v1h2v2h1v-2h2V9h-2V7z"/>
-                </svg>
-            </div>
-        </a>
+    <div class="dashboard-wrapper">
 
-        <div class="brand-title">Lost &amp; Found</div>
+        <aside class="sidebar">
+            <a class="sidebar-brand">
+                <div class="brand-icon">SLF</div>
 
-        <ul class="nav-menu">
-            <li>
+                <div class="brand-text">
+                    <strong>LOST &amp; FOUND</strong>
+                    <span>STUDENT PORTAL</span>
+                </div>
+            </a>
+
+            <div class="nav-title">Main Menu</div>
+
+            <nav class="navigation">
                 <a href="student_dashboard.php" class="nav-item active">
-                    <span class="icon">🏫</span>
+                    <span class="nav-icon">⌂</span>
                     <span>Dashboard</span>
                 </a>
-            </li>
-            <li>
+
                 <a href="report_lost.php" class="nav-item nav-lost">
-                    <span class="icon">🔍</span>
+                    <span class="nav-icon">⌕</span>
                     <span>Report Lost Item</span>
                 </a>
-            </li>
-            <li>
+
                 <a href="report_found.php" class="nav-item nav-found">
-                    <span class="icon">📦</span>
+                    <span class="nav-icon">□</span>
                     <span>Report Found Item</span>
                 </a>
-            </li>
-            <li>
+
                 <a href="my_reports.php" class="nav-item">
-                    <span class="icon">📊</span>
+                    <span class="nav-icon">▤</span>
                     <span>My Reports</span>
                 </a>
-            </li>
-            <li>
+
                 <a href="profile.php" class="nav-item">
-                    <span class="icon">👤</span>
+                    <span class="nav-icon">○</span>
                     <span>Profile</span>
                 </a>
-            </li>
-        </ul>
-
-        <div class="logout">
-            <a href="st_logout_con.php" class="nav-item">
-                <span class="icon">↪</span>
-                <span>Log Out</span>
-            </a>
-        </div>
-    </aside>
-
-    <main class="main-content">
-        <header class="header">
-            <h1 class="page-title">Student Portal</h1>
-            <div class="user-profile">
-                <div class="user-info">
-                    <span class="user-name"><?php echo htmlspecialchars($fullname); ?></span>
-                    <span class="user-role">Student</span>
-                </div>
-                <div class="avatar">
-                    <?php echo strtoupper(substr($fullname, 0, 1)); ?>
-                </div>
+            </nav>
+            <div class="sidebar-bottom">
+                <a href="../logout.php" class="nav-item"
+                 onclick="return confirmLogout();">
+                    <span class="nav-icon">↪</span>
+                    <span>Log Out</span>
+                </a>
             </div>
-        </header>
+        </aside>
 
-        <section class="content-display">
-            <div class="welcome-banner">
-                <div class="banner-text">
-                    <h2>Welcome back, <?php echo htmlspecialchars($fullname); ?>!</h2>
-                    <p>Track your submitted reports or log a new lost/found item below.</p>
-                </div>
-                <div class="action-buttons">
-                    <a href="report_lost.php" class="btn-action">+ Report Lost</a>
-                    <a href="report_found.php" class="btn-action-alt">+ Report Found</a>
-                </div>
-            </div>
+        <label for="menu-toggle" class="menu-overlay"></label>
 
-            <div class="dashboard-grid">
-                <div class="left-col">
-                    <div class="section-title">My Activity Overview</div>
-                    <div class="stats-row">
-                        <div class="stat-card card-red">
-                            <div class="stat-num">0</div>
-                            <div class="stat-label">Active Reports</div>
-                        </div>
-                        <div class="stat-card card-orange">
-                            <div class="stat-num">0</div>
-                            <div class="stat-label">Potential Matches</div>
-                        </div>
-                        <div class="stat-card card-green">
-                            <div class="stat-num">0</div>
-                            <div class="stat-label">Items Recovered</div>
-                        </div>
-                    </div>
+        <main class="main-wrapper">
 
-                    <div class="section-title">Recently Found Items On Campus</div>
-                    <div class="recent-items-grid">
-                        <div class="item-card">
-                            <div class="item-icon">💧</div>
-                            <div class="item-title">Water Bottle</div>
-                            <div class="item-location">Library • Today</div>
-                            <span class="badge-found">Found</span>
-                        </div>
-                        <div class="item-card">
-                            <div class="item-icon">🧮</div>
-                            <div class="item-title">Calculator</div>
-                            <div class="item-location">Rm 101 • Yesterday</div>
-                            <span class="badge-found">Found</span>
-                        </div>
-                        <div class="item-card">
-                            <div class="item-icon">👛</div>
-                            <div class="item-title">Wallet</div>
-                            <div class="item-location">Cafeteria • Oct 24</div>
-                            <span class="badge-found">Found</span>
-                        </div>
+            <header class="top-header">
+                <div class="header-left">
+                    <label for="menu-toggle"
+                           class="mobile-menu-btn"
+                           aria-label="Open navigation menu">
+                        <span></span>
+                        <span></span>
+                        <span></span>
+                    </label>
+
+                    <div class="header-title">
+                        <h1>
+                            Welcome back,
+                            <?php echo htmlspecialchars($fullname); ?>!
+                        </h1>
+
+                        <p>
+                            Manage and monitor your lost &amp; found
+                            activities on campus.
+                        </p>
                     </div>
                 </div>
 
-                <div class="right-col">
-                    <div class="section-title">System Updates</div>
-                    <div class="feed-box">
-                        <div class="feed-item">
-                            <div class="feed-item-title">System Alert</div>
-                            <div class="feed-item-desc">Welcome to the new Lost &amp; Found portal. Submit a claim if you lost an item.</div>
-                            <div class="feed-time">Just now</div>
-                        </div>
-                        <div class="feed-item">
-                            <div class="feed-item-title">Office Notice</div>
-                            <div class="feed-item-desc">Items can be retrieved at the Student Affairs Office (Mon–Fri).</div>
-                            <div class="feed-time">1 day ago</div>
-                        </div>
+            </header>
+
+            <div class="content-body">
+                <section class="welcome-panel">
+                    <div class="welcome-copy">
+                        <span class="welcome-label">Student Portal</span>
+                        <h2>A simpler way to reconnect with lost items.</h2>
+                        <p>
+                            Welcome to the SLF campus community. Report an item,
+                            check your submissions, and keep your profile details
+                            up to date using the navigation menu.
+                        </p>
+                    </div>
+
+                </section>
+
+                <div class="dashboard-note">
+                    <span class="note-mark" aria-hidden="true">i</span>
+                    <div>
+                        <strong>Helpful reminder</strong>
+                        Include a clear description, accurate location, and date
+                        when submitting a report. These details can help the
+                        campus community identify an item more easily.
                     </div>
                 </div>
             </div>
-        </section>
-    </main>
-</div>
 
+            <footer class="dashboard-footer">
+                Student Lost &amp; Found <span aria-hidden="true">·</span> Student Portal
+            </footer>
+        </main>
+    </div>
+<script>
+window.addEventListener("pageshow", function (event) {
+    if (event.persisted) {
+        window.location.reload();
+    }
+});
+
+function confirmLogout() {
+    return confirm("Are you sure you want to log out?");
+}
+</script>
 </body>
 </html>

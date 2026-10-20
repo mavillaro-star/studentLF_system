@@ -1,11 +1,7 @@
 <?php
-
 session_start();
-
 include '../../db.php';
 
-
-// Check if logged in
 if (!isset($_SESSION['user_id'])) {
 
     header("Location: ../login.php");
@@ -16,14 +12,10 @@ if (!isset($_SESSION['user_id'])) {
 
 $user_id = $_SESSION['user_id'];
 
-
-// Check ID
 if (isset($_GET['id'])) {
 
     $id = $_GET['id'];
 
-
-    // Get report
     $result = mysqli_query($conn,
         "SELECT * FROM lost_items WHERE id='$id'"
     );
@@ -34,13 +26,8 @@ if (isset($_GET['id'])) {
 
         $row = mysqli_fetch_assoc($result);
 
-
-
-        // If user clicked YES
         if (isset($_POST['confirm_delete'])) {
 
-
-            // Delete image
             if (!empty($row['image'])) {
 
                 $image = "../uploads/" . $row['image'];
@@ -53,8 +40,6 @@ if (isset($_GET['id'])) {
 
             }
 
-
-            // Delete database record
             $delete = mysqli_query($conn,
                 "DELETE FROM lost_items WHERE id='$id'"
             );
@@ -72,7 +57,6 @@ if (isset($_GET['id'])) {
 
         } 
         
-        // If user clicked NO
         elseif (isset($_POST['cancel'])) {
 
 
@@ -82,7 +66,6 @@ if (isset($_GET['id'])) {
 
         }
 
-        // Show confirmation page
         else {
 
 ?>
@@ -132,6 +115,4 @@ if (isset($_GET['id'])) {
     exit();
 
 }
-
-
 ?>

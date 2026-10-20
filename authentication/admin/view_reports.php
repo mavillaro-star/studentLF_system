@@ -2,7 +2,18 @@
 session_start();
 include '../../db.php';
 
-// Check if user is logged in and admin
+function resolve_admin_report_image_url($filename, array $folders): string
+{
+    $filename = basename((string) $filename);
+    foreach ($folders as $folder) {
+        if ($filename !== '' && is_file(__DIR__ . '/' . $folder . $filename)) {
+            return $folder . rawurlencode($filename);
+        }
+    }
+    return '';
+}
+
+
 if (!isset($_SESSION['user_id']) || $_SESSION['role'] != "admin") {
     header("Location: ../login.php");
     exit();
@@ -561,9 +572,13 @@ if (!$found) {
             }
         }
     </style>
+    <link rel="stylesheet" href="../../responsive.css">
 </head>
 
-<body>
+<body class="admin-sidebar-page">
+<input type="checkbox" id="admin-menu-toggle" aria-label="Toggle navigation menu">
+<label class="mobile-sidebar-toggle" for="admin-menu-toggle" aria-label="Toggle navigation menu">☰</label>
+<label class="mobile-sidebar-overlay" for="admin-menu-toggle" aria-hidden="true"></label>
 
 <div class="dashboard-container">
 
@@ -646,21 +661,22 @@ if (!$found) {
 
         </ul>
 
-        <div class="logout">
+         <div class="sidebar-bottom">
 
-            <a href="ad_logout_con.php" class="nav-item logout-btn">
+            <a
+                href="../../authentication/logout.php"
+                class="nav-item"
+                onclick="return confirmLogout();"
+            >
 
-                <svg class="nav-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
-                    <polyline points="16 17 21 12 16 7"/>
-                    <line x1="21" y1="12" x2="9" y2="12"/>
-                </svg>
-
-                <span>Log Out</span>
+                <span class="nav-icon"> ↪</span>
+                <span> Log Out</span>
 
             </a>
 
         </div>
+
+
 
     </aside>
 
@@ -816,12 +832,14 @@ if (!$found) {
 
                                         <td>
 
-                                            <?php if (!empty($row['image'])): ?>
+                                            <?php $imageUrl = resolve_admin_report_image_url($row['image'] ?? '', ['../../authentication/uploads/', '../../uploads/']); ?>
+                                            <?php if ($imageUrl !== ''): ?>
 
                                                 <img
-                                                    src="../../uploads/<?php echo htmlspecialchars($row['image']); ?>"
+                                                    src="<?php echo htmlspecialchars($imageUrl, ENT_QUOTES, 'UTF-8'); ?>"
                                                     class="item-thumb"
                                                     alt="Lost Item"
+                                                    loading="lazy"
                                                 >
 
                                             <?php else: ?>
@@ -984,12 +1002,14 @@ if (!$found) {
 
                                         <td>
 
-                                            <?php if (!empty($row['image'])): ?>
+                                            <?php $imageUrl = resolve_admin_report_image_url($row['image'] ?? '', ['../../uploads/', '../../authentication/uploads/']); ?>
+                                            <?php if ($imageUrl !== ''): ?>
 
                                                 <img
-                                                    src="../../uploads/<?php echo htmlspecialchars($row['image']); ?>"
+                                                    src="<?php echo htmlspecialchars($imageUrl, ENT_QUOTES, 'UTF-8'); ?>"
                                                     class="item-thumb"
                                                     alt="Found Item"
+                                                    loading="lazy"
                                                 >
 
                                             <?php else: ?>

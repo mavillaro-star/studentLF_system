@@ -14,10 +14,6 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== "student") {
 
 $user_id = $_SESSION['user_id'];
 
-/* ==========================================
-   GET STUDENT INFORMATION
-========================================== */
-
 $stmt = $conn->prepare("
     SELECT id, fullname, profile_picture, course, year_level,
            contact_number, email, password, role
@@ -41,10 +37,6 @@ if (!$user) {
 
 $message = "";
 $message_type = "";
-
-/* ==========================================
-   UPDATE PROFILE
-========================================== */
 
 if (isset($_POST['update'])) {
 
@@ -72,10 +64,6 @@ if (isset($_POST['update'])) {
 
     } else {
 
-        /* ==========================================
-           CHECK DUPLICATE EMAIL
-        ========================================== */
-
         $emailCheck = $conn->prepare("
             SELECT id
             FROM users
@@ -95,10 +83,6 @@ if (isset($_POST['update'])) {
             $message_type = "error";
 
         } else {
-
-            /* ==========================================
-               PROFILE PICTURE
-            ========================================== */
 
             $profile_picture = $user['profile_picture'] ?? '';
 
@@ -161,10 +145,6 @@ if (isset($_POST['update'])) {
                     }
                 }
             }
-
-            /* ==========================================
-               UPDATE ACCOUNT
-            ========================================== */
 
             if ($message_type !== "error") {
 
@@ -267,15 +247,7 @@ if (isset($_POST['update'])) {
     }
 }
 
-/* ==========================================
-   PROFILE IMAGE
-========================================== */
-
 $fullname = $user['fullname'] ?? 'Student';
-
-$studentInitial = strtoupper(
-    substr(trim($fullname), 0, 1)
-);
 
 $profilePic = !empty($user['profile_picture'])
     ? $user['profile_picture']
@@ -337,13 +309,8 @@ if (
             margin: 0;
             padding: 0;
             box-sizing: border-box;
-
-            font-family:
-                -apple-system,
-                BlinkMacSystemFont,
-                "Segoe UI",
-                Arial,
-                sans-serif;
+            font-family: Arial, Helvetica, sans-serif;
+                
         }
 
         html,
@@ -369,20 +336,11 @@ if (
             display: none;
         }
 
-        /* ==========================================
-           MAIN LAYOUT
-        ========================================== */
-
         .dashboard {
             width: 100%;
             min-height: 100vh;
             display: flex;
         }
-
-        /* ==========================================
-           SIDEBAR
-           SAME DESIGN AS PROFILE.PHP
-        ========================================== */
 
         .sidebar {
             position: fixed;
@@ -407,70 +365,36 @@ if (
             overflow-y: auto;
         }
 
-        .brand-link {
-            text-decoration: none !important;
-            color: inherit;
-        }
-
-        .brand {
+            .sidebar-brand {
             display: flex;
             align-items: center;
-
             gap: 12px;
-
             padding: 2px 8px 25px;
-
-            border-bottom: 1px solid #26334c;
-
             margin-bottom: 22px;
+            border-bottom: 1px solid #2563eb;
+            text-decoration: none;
+            color: #ffffff;
         }
 
-        .brand-mark {
+        .brand-icon {
             width: 42px;
             height: 42px;
-
+            flex-shrink: 0;
             border-radius: 12px;
-
             background: #1d2a44;
-
             display: flex;
             align-items: center;
             justify-content: center;
-
-            position: relative;
-
-            overflow: hidden;
-        }
-
-        .brand-mark::before {
-            content: "";
-
-            width: 18px;
-            height: 18px;
-
-            border: 2px solid #4da3ff;
-
-            border-radius: 50%;
-
-            position: absolute;
-        }
-
-        .brand-mark::after {
-            content: "";
-
-            width: 24px;
-            height: 2px;
-
-            background: #4da3ff;
-
-            transform: rotate(-45deg);
-
-            position: absolute;
+            color: #4da3ff;
+            font-size: 13px;
+            font-weight: 800;
+            letter-spacing: 1px;
         }
 
         .brand-text {
             display: flex;
             flex-direction: column;
+            min-width: 0;
         }
 
         .brand-text strong {
@@ -485,7 +409,6 @@ if (
             margin-top: 3px;
             letter-spacing: .5px;
         }
-
         .nav-title {
             font-size: 9px;
 
@@ -1555,10 +1478,6 @@ if (
 
         }
 
-        /* ==========================================
-           SMALL PHONE
-        ========================================== */
-
         @media screen and (max-width: 430px) {
 
             .sidebar {
@@ -1613,10 +1532,6 @@ if (
 
         }
 
-        /* ==========================================
-           EXTRA SMALL PHONE
-        ========================================== */
-
         @media screen and (max-width: 350px) {
 
             .photo-area {
@@ -1641,6 +1556,7 @@ if (
 
     </style>
 
+    <link rel="stylesheet" href="../../responsive.css">
 </head>
 
 <body>
@@ -1652,37 +1568,16 @@ if (
 
 <div class="dashboard">
 
-    <!-- ==========================================
-         SIDEBAR
-         EXACT PROFILE NAVIGATION
-    ========================================== -->
-
     <aside class="sidebar">
+        <a href="student_dashboard.php" class="sidebar-brand">
+    <div class="brand-icon">SLF</div>
 
-        <a
-            href="students.php"
-            class="brand-link"
-        >
-
-            <div class="brand">
-
-                <div class="brand-mark"></div>
-
-                <div class="brand-text">
-
-                    <strong>
-                        LOST &amp; FOUND
-                    </strong>
-
-                    <span>
-                        STUDENT PORTAL
-                    </span>
-
-                </div>
-
-            </div>
-
+    <div class="brand-text">
+        <strong>LOST &amp; FOUND</strong>
+        <span>STUDENT PORTAL</span>
+    </div>
         </a>
+        
 
         <div class="nav-title">
             Main Menu
@@ -1693,7 +1588,7 @@ if (
             <li>
 
                 <a
-                    href="students.php"
+                    href="student_dashboard.php"
                     class="nav-item"
                 >
 
@@ -1809,24 +1704,12 @@ if (
 
     </aside>
 
-    <!-- ==========================================
-         MOBILE OVERLAY
-    ========================================== -->
-
     <label
         for="menu-toggle"
         class="menu-overlay"
     ></label>
 
-    <!-- ==========================================
-         MAIN CONTENT
-    ========================================== -->
-
     <main class="main-content">
-
-        <!-- ==========================================
-             TOPBAR
-        ========================================== -->
 
         <header class="topbar">
 
@@ -1854,72 +1737,8 @@ if (
                     </p>
 
                 </div>
-
             </div>
-
-            <div class="user-area">
-
-                <div class="notification">
-                    ♢
-                </div>
-
-                <div class="user-divider"></div>
-
-                <div class="user-info">
-
-                    <span class="user-name">
-
-                        <?php
-                        echo htmlspecialchars($fullname);
-                        ?>
-
-                    </span>
-
-                    <span class="user-role">
-                        Student Account
-                    </span>
-
-                </div>
-
-                <div class="avatar">
-
-                    <?php if (
-                        !empty($profilePic) &&
-                        file_exists($profileServerPath)
-                    ): ?>
-
-                        <img
-                            src="<?php echo htmlspecialchars($profileImage); ?>"
-                            alt="Student Profile"
-                        >
-
-                    <?php elseif (
-                        !empty($profilePic) &&
-                        file_exists($mainServerPath)
-                    ): ?>
-
-                        <img
-                            src="<?php echo htmlspecialchars($profileImage); ?>"
-                            alt="Student Profile"
-                        >
-
-                    <?php else: ?>
-
-                        <?php
-                        echo htmlspecialchars($studentInitial);
-                        ?>
-
-                    <?php endif; ?>
-
-                </div>
-
-            </div>
-
         </header>
-
-        <!-- ==========================================
-             PAGE CONTENT
-        ========================================== -->
 
         <div class="page-content">
 
@@ -1966,10 +1785,6 @@ if (
                     enctype="multipart/form-data"
                     class="edit-form"
                 >
-
-                    <!-- ==================================
-                         PROFILE PICTURE
-                    ================================== -->
 
                     <div class="form-section">
 
@@ -2053,10 +1868,6 @@ if (
                         </div>
 
                     </div>
-
-                    <!-- ==================================
-                         PERSONAL INFORMATION
-                    ================================== -->
 
                     <div class="form-section">
 
@@ -2270,10 +2081,6 @@ if (
 
                     </div>
 
-                    <!-- ==================================
-                         ACCOUNT SECURITY
-                    ================================== -->
-
                     <div class="form-section">
 
                         <div class="section-label">
@@ -2337,10 +2144,6 @@ if (
 
                     </div>
 
-                    <!-- ==================================
-                         ACTIONS
-                    ================================== -->
-
                     <div class="form-actions">
 
                         <div class="button-group">
@@ -2373,50 +2176,11 @@ if (
 </div>
 
 <script>
-
 function confirmLogout() {
 
     return confirm(
         "Are you sure you want to log out?"
     );
-
-}
-
-function previewImage(input) {
-
-    const preview =
-        document.getElementById("profilePreview");
-
-    const initial =
-        document.getElementById("profileInitial");
-
-    if (
-        input.files &&
-        input.files[0]
-    ) {
-
-        const reader =
-            new FileReader();
-
-        reader.onload = function(e) {
-
-            preview.src =
-                e.target.result;
-
-            preview.style.display =
-                "block";
-
-            if (initial) {
-                initial.style.display =
-                    "none";
-            }
-
-        };
-
-        reader.readAsDataURL(
-            input.files[0]
-        );
-    }
 
 }
 </script>

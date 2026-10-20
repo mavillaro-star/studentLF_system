@@ -1,0 +1,218 @@
+/* Shared responsive safeguards for all rendered pages. */
+*,
+*::before,
+*::after {
+    min-width: 0;
+}
+
+html {
+    width: 100%;
+    max-width: 100%;
+    overflow-x: clip;
+}
+
+body {
+    width: 100%;
+    max-width: 100%;
+}
+
+img,
+video,
+canvas,
+svg {
+    max-width: 100%;
+}
+
+input,
+select,
+textarea,
+button {
+    max-width: 100%;
+}
+
+table {
+    max-width: 100%;
+}
+
+@media (max-width: 768px) {
+    body {
+        overflow-wrap: anywhere;
+    }
+
+    main,
+    section,
+    article,
+    .main-content,
+    .dashboard-body,
+    .page-content,
+    .content-area {
+        min-width: 0;
+        max-width: 100%;
+    }
+
+    /* Keep data tables usable without forcing the whole page wider. */
+    table {
+        display: block;
+        width: 100%;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    th,
+    td {
+        overflow-wrap: anywhere;
+    }
+
+    form,
+    fieldset,
+    .card,
+    .panel,
+    .dashboard-panel,
+    .profile-card,
+    .form-card {
+        max-width: 100%;
+    }
+
+    input[type="text"],
+    input[type="email"],
+    input[type="password"],
+    input[type="date"],
+    input[type="file"],
+    input[type="search"],
+    select,
+    textarea {
+        width: 100%;
+    }
+}
+
+@media (max-width: 480px) {
+    .dashboard-body,
+    .page-content,
+    .content-area {
+        padding-left: 14px;
+        padding-right: 14px;
+    }
+
+    button,
+    input[type="submit"],
+    input[type="button"] {
+        max-width: 100%;
+    }
+}
+
+/* Admin sidebar drawer controlled by the HTML checkbox and labels. */
+@media (max-width: 900px) {
+    body.admin-sidebar-page {
+        overflow-x: hidden;
+    }
+
+    body.admin-sidebar-page .sidebar {
+        position: fixed !important;
+        inset: 0 auto 0 0 !important;
+        width: min(280px, 86vw) !important;
+        height: 100dvh !important;
+        min-height: 100dvh !important;
+        overflow-y: auto;
+        z-index: 1300 !important;
+        transform: translateX(-105%) !important;
+        transition: transform .25s ease !important;
+    }
+
+    /* Keep the full navigation labels visible inside the opened drawer. */
+    body.admin-sidebar-page .sidebar .sidebar-brand {
+        justify-content: flex-start !important;
+        padding-left: 10px !important;
+        padding-right: 10px !important;
+    }
+
+    body.admin-sidebar-page .sidebar .sidebar-brand > div:last-child {
+        display: block !important;
+    }
+
+    body.admin-sidebar-page .sidebar .nav-item,
+    body.admin-sidebar-page .sidebar .logout-link {
+        justify-content: flex-start !important;
+        padding-left: 13px !important;
+        padding-right: 13px !important;
+    }
+
+    body.admin-sidebar-page .sidebar .nav-item > span:not(.nav-icon):not(.nav-count),
+    body.admin-sidebar-page .sidebar .logout-link span:last-child {
+        display: inline !important;
+    }
+
+    body.admin-sidebar-page .sidebar .nav-count {
+        position: static !important;
+        margin: 0 0 0 auto !important;
+    }
+
+    #admin-menu-toggle:checked ~ .dashboard-wrapper .sidebar,
+    #admin-menu-toggle:checked ~ .dashboard-container .sidebar {
+        transform: translateX(0) !important;
+    }
+
+    #admin-menu-toggle:checked ~ .mobile-sidebar-overlay {
+        display: block;
+    }
+
+    body.admin-sidebar-page .main-content {
+        width: 100% !important;
+        margin-left: 0 !important;
+        padding-top: max(64px, env(safe-area-inset-top)) !important;
+    }
+
+    #admin-menu-toggle {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        opacity: 0;
+        pointer-events: none;
+    }
+
+    .mobile-sidebar-toggle {
+        position: fixed;
+        top: max(12px, env(safe-area-inset-top));
+        left: 12px;
+        z-index: 1400;
+        display: inline-flex;
+        width: 44px;
+        height: 44px;
+        align-items: center;
+        justify-content: center;
+        border: 1px solid #cbd5e1;
+        border-radius: 10px;
+        color: #0f172a;
+        background: #fff;
+        box-shadow: 0 4px 14px rgba(15, 23, 42, .14);
+        font-size: 24px;
+        line-height: 1;
+        cursor: pointer;
+    }
+
+    #admin-menu-toggle:focus-visible + .mobile-sidebar-toggle {
+        outline: 3px solid #2563eb;
+        outline-offset: 3px;
+    }
+
+    .mobile-sidebar-overlay {
+        display: none;
+        position: fixed;
+        inset: 0;
+        z-index: 1250;
+        background: rgba(15, 23, 42, .48);
+    }
+
+}
+
+@media (min-width: 901px) {
+    .mobile-sidebar-toggle,
+    .mobile-sidebar-overlay {
+        display: none !important;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    body.admin-sidebar-page .sidebar {
+        transition: none !important;
+    }
+}

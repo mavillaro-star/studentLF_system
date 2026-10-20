@@ -1,4 +1,3 @@
-```php
 <?php
 session_start();
 include '../../db.php';
@@ -32,8 +31,6 @@ if (mysqli_num_rows($result) === 0) {
 
 $user = mysqli_fetch_assoc($result);
 
-$admin_fullname = $_SESSION['fullname'] ?? 'Admin';
-
 // Profile picture
 $profilePic = !empty($user['profile_picture'])
     ? $user['profile_picture']
@@ -63,8 +60,23 @@ if (count($name_parts) >= 2) {
 
 $role = strtolower($user['role'] ?? 'student');
 
-// Admin initials
-$admin_initial = strtoupper(substr(trim($admin_fullname), 0, 1));
+$lost_count = 0;
+$found_count = 0;
+$modals = [];
+
+$lost_result = mysqli_query($conn, "SELECT COUNT(*) AS total FROM lost_items");
+
+if ($lost_result) {
+    $lost_data = mysqli_fetch_assoc($lost_result);
+    $lost_count = (int)($lost_data['total'] ?? 0);
+}
+
+$found_result = mysqli_query($conn, "SELECT COUNT(*) AS total FROM found_items");
+
+if ($found_result) {
+    $found_data = mysqli_fetch_assoc($found_result);
+    $found_count = (int)($found_data['total'] ?? 0);
+}
 ?>
 
 <!DOCTYPE html>
@@ -75,27 +87,15 @@ $admin_initial = strtoupper(substr(trim($admin_fullname), 0, 1));
 
     <title>User Profile Details - Admin Console</title>
 
-    <!-- Your existing admin design -->
     <link rel="stylesheet" href="admin.css">
 
     <style>
-
-        /* =====================================================
-           MAIN CONTENT
-           Sidebar is fixed at 260px in admin.css
-        ===================================================== */
-
         .main-content {
             margin-left: 260px;
             width: calc(100% - 260px);
             min-height: 100vh;
             padding: 28px 30px;
         }
-
-
-        /* =====================================================
-           PAGE HEADER
-        ===================================================== */
 
         .user-page-header {
             width: 100%;
@@ -117,51 +117,7 @@ $admin_initial = strtoupper(substr(trim($admin_fullname), 0, 1));
             font-size: 13px;
             color: var(--muted);
         }
-
-
-        /* =====================================================
-           ADMIN PROFILE HEADER
-        ===================================================== */
-
-        .admin-header-profile {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .admin-header-info {
-            display: flex;
-            flex-direction: column;
-            text-align: right;
-        }
-
-        .admin-header-name {
-            font-size: 13px;
-            font-weight: 700;
-            color: var(--text);
-        }
-
-        .admin-header-role {
-            margin-top: 3px;
-            font-size: 11px;
-            color: var(--muted);
-        }
-
-        .admin-header-avatar {
-            width: 38px;
-            height: 38px;
-            border-radius: 50%;
-            background: var(--red);
-            color: #ffffff;
-
-            display: flex;
-            align-items: center;
-            justify-content: center;
-
-            font-size: 14px;
-            font-weight: 700;
-        }
-
+        
 
         /* =====================================================
            BACK LINK
@@ -554,10 +510,6 @@ $admin_initial = strtoupper(substr(trim($admin_fullname), 0, 1));
                 font-size: 20px;
             }
 
-            .admin-header-info {
-                display: none;
-            }
-
             .user-profile-layout {
                 grid-template-columns: 1fr;
             }
@@ -629,9 +581,13 @@ $admin_initial = strtoupper(substr(trim($admin_fullname), 0, 1));
         }
 
     </style>
+    <link rel="stylesheet" href="../../responsive.css">
 </head>
 
-<body>
+<body class="admin-sidebar-page">
+<input type="checkbox" id="admin-menu-toggle" aria-label="Toggle navigation menu">
+<label class="mobile-sidebar-toggle" for="admin-menu-toggle" aria-label="Toggle navigation menu">☰</label>
+<label class="mobile-sidebar-overlay" for="admin-menu-toggle" aria-hidden="true"></label>
 
 <div class="dashboard-wrapper">
 
@@ -671,15 +627,27 @@ $admin_initial = strtoupper(substr(trim($admin_fullname), 0, 1));
             <a href="view_lost.php" class="nav-item">
                 <span class="nav-icon">▣</span>
                 <span>Lost Item Reports</span>
+
+                <?php if ($lost_count > 0): ?>
+                    <span class="nav-count">
+                        <?php echo $lost_count; ?>
+                    </span>
+                <?php endif; ?>
             </a>
 
             <a href="view_found.php" class="nav-item">
                 <span class="nav-icon">⌕</span>
                 <span>Found Item Reports</span>
+
+                <?php if ($found_count > 0): ?>
+                    <span class="nav-count">
+                        <?php echo $found_count; ?>
+                    </span>
+                <?php endif; ?>
             </a>
 
             <a href="admin_profile.php" class="nav-item">
-                <span class="nav-icon">👤</span>
+                <span class="nav-icon">○</span>
                 <span>My Profile</span>
             </a>
 
@@ -688,8 +656,9 @@ $admin_initial = strtoupper(substr(trim($admin_fullname), 0, 1));
 
         <div class="sidebar-bottom">
 
-            <a href="logout.php" class="logout-link">
-                <span>↪</span>
+            <a href="../../authentication/logout.php" class="nav-item"
+             onclick="return confirmLogout();">
+                <span class="nav-icon">↪</span>
                 <span>Log Out</span>
             </a>
 
@@ -718,26 +687,6 @@ $admin_initial = strtoupper(substr(trim($admin_fullname), 0, 1));
 
             </div>
 
-
-            <div class="admin-header-profile">
-
-                <div class="admin-header-info">
-
-                    <span class="admin-header-name">
-                        <?php echo htmlspecialchars($admin_fullname); ?>
-                    </span>
-
-                    <span class="admin-header-role">
-                        Administrator
-                    </span>
-
-                </div>
-
-                <div class="admin-header-avatar">
-                    <?php echo htmlspecialchars($admin_initial); ?>
-                </div>
-
-            </div>
 
         </div>
 
@@ -1073,6 +1022,11 @@ $admin_initial = strtoupper(substr(trim($admin_fullname), 0, 1));
     </main>
 
 </div>
+     <script>
+function confirmLogout() {
+    return confirm("Are you sure you want to log out?");
+}
+</script>
 
 </body>
 </html>

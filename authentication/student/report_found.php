@@ -41,22 +41,13 @@ if (isset($_POST['submit'])) {
     $status = "Found";
     $image = "";
 
-
-    /* ==========================================
-       SERVER-SIDE DATE VALIDATION
-       Prevent future dates
-    ========================================== */
+    /* SERVER-SIDE DATE VALIDATION */
 
     if ($date_found > date('Y-m-d')) {
-
         $message = "Invalid date. The date found cannot be a future date.";
-
     }
 
-
-    /* ==========================================
-       IMAGE UPLOAD
-    ========================================== */
+    /* IMAGE UPLOAD */
 
     if (empty($message)) {
 
@@ -81,27 +72,18 @@ if (isset($_POST['submit'])) {
                 )
             );
 
-
             // Check file type
             if (!in_array($file_extension, $allowed_types)) {
-
-                $message =
-                    "Invalid image format. Please upload JPG, JPEG, PNG, or WEBP.";
-
+                $message = "Invalid image format. Please upload JPG, JPEG, PNG, or WEBP.";
             }
-
 
             // Check file size
             elseif (
                 $_FILES['image']['size'] >
                 2 * 1024 * 1024
             ) {
-
-                $message =
-                    "Image size must not exceed 2MB.";
-
+                $message = "Image size must not exceed 2MB.";
             }
-
 
             else {
 
@@ -111,17 +93,13 @@ if (isset($_POST['submit'])) {
 
                 $upload_folder = "../../uploads/";
 
-
                 if (!file_exists($upload_folder)) {
-
                     mkdir(
                         $upload_folder,
                         0777,
                         true
                     );
-
                 }
-
 
                 if (
                     !move_uploaded_file(
@@ -129,20 +107,13 @@ if (isset($_POST['submit'])) {
                         $upload_folder . $image
                     )
                 ) {
-
-                    $message =
-                        "Image upload failed!";
-
+                    $message = "Image upload failed!";
                 }
-
             }
         }
     }
 
-
-    /* ==========================================
-       INSERT FOUND ITEM
-    ========================================== */
+    /* INSERT FOUND ITEM */
 
     if (empty($message)) {
 
@@ -167,27 +138,19 @@ if (isset($_POST['submit'])) {
                     '$status'
                 )";
 
-
         if (mysqli_query($conn, $sql)) {
 
-
-            /* ==========================================
-               NOTIFY ALL ADMINS
-            ========================================== */
+            /* NOTIFY ALL ADMINS */
 
             $admins = mysqli_query(
                 $conn,
                 "SELECT id FROM users WHERE role = 'admin'"
             );
 
-
             while ($admin = mysqli_fetch_assoc($admins)) {
 
                 $admin_id = $admin['id'];
-
-                $notif_msg =
-                    "New Found Item reported: '$item_name'";
-
+                $notif_msg = "New Found Item reported: '$item_name'";
 
                 $notif_stmt = mysqli_prepare(
                     $conn,
@@ -196,7 +159,6 @@ if (isset($_POST['submit'])) {
                     VALUES (?, ?)"
                 );
 
-
                 mysqli_stmt_bind_param(
                     $notif_stmt,
                     "is",
@@ -204,1867 +166,966 @@ if (isset($_POST['submit'])) {
                     $notif_msg
                 );
 
-
-                mysqli_stmt_execute(
-                    $notif_stmt
-                );
-
-
-                mysqli_stmt_close(
-                    $notif_stmt
-                );
+                mysqli_stmt_execute($notif_stmt);
+                mysqli_stmt_close($notif_stmt);
             }
 
+            /* REDIRECT TO MY REPORTS */
 
-            /* ==========================================
-               REDIRECT TO MY REPORTS
-            ========================================== */
-
-            header(
-                "Location: my_reports.php"
-            );
-
+            header("Location: my_reports.php");
             exit();
 
-
         } else {
-
-            $message =
-                "Database Error: " .
-                mysqli_error($conn);
-
+            $message = "Database Error: " . mysqli_error($conn);
         }
     }
 }
 ?>
 
 <!DOCTYPE html>
-
 <html lang="en">
 
 <head>
-<meta charset="UTF-8">
-<meta
-    name="viewport"
-    content="width=device-width, initial-scale=1.0">
-
-<title>Report Found Item</title>
-
-
-<style>
-
-    * {
-        margin: 0;
-        padding: 0;
-        box-sizing: border-box;
-
-        font-family:
-            -apple-system,
-            BlinkMacSystemFont,
-            "Segoe UI",
-            Arial,
-            sans-serif;
-    }
-
-
-    html,
-    body {
-        width: 100%;
-        min-height: 100%;
-    }
-
-
-    body {
-        background: #eef3f8;
-        color: #172033;
-    }
-
-
-    /* ==========================================
-       MAIN LAYOUT
-    ========================================== */
-
-    .dashboard {
-        width: 100%;
-        min-height: 100vh;
-
-        display: flex;
-    }
-
-
-    /* ==========================================
-       MOBILE MENU CHECKBOX
-    ========================================== */
-
-    #menu-toggle {
-        display: none;
-    }
-
-
-    /* ==========================================
-       SIDEBAR
-    ========================================== */
-
-    .sidebar {
-        position: fixed;
-
-        left: 0;
-        top: 0;
-
-        width: 230px;
-        height: 100vh;
-
-        background: #111a2d;
-        color: #ffffff;
-
-        display: flex;
-        flex-direction: column;
-
-        padding: 24px 16px;
-
-        z-index: 100;
-
-        border-right: 1px solid #1f2b43;
-
-        overflow-y: auto;
-    }
-
-
-    .brand-link {
-        text-decoration: none;
-        color: inherit;
-    }
-
-
-    .brand {
-        display: flex;
-        align-items: center;
-
-        gap: 12px;
-
-        padding: 2px 8px 25px;
-
-        border-bottom: 1px solid #26334c;
-
-        margin-bottom: 22px;
-    }
-
-
-    .brand-mark {
-        width: 42px;
-        height: 42px;
-
-        border-radius: 12px;
-
-        background: #1d2a44;
-
-        display: flex;
-        align-items: center;
-        justify-content: center;
-
-        position: relative;
-
-        overflow: hidden;
-    }
-
-
-    .brand-mark::before {
-        content: "";
-
-        width: 18px;
-        height: 18px;
-
-        border: 2px solid #4da3ff;
-
-        border-radius: 50%;
-
-        position: absolute;
-    }
-
-
-    .brand-mark::after {
-        content: "";
-
-        width: 24px;
-        height: 2px;
-
-        background: #4da3ff;
-
-        transform: rotate(-45deg);
-
-        position: absolute;
-    }
-
-
-    .brand-text {
-        display: flex;
-        flex-direction: column;
-    }
-
-
-    .brand-text strong {
-        font-size: 13px;
-
-        letter-spacing: 1px;
-
-        color: #ffffff;
-    }
-
-
-    .brand-text span {
-        font-size: 10px;
-
-        color: #75839b;
-
-        margin-top: 3px;
-
-        letter-spacing: .5px;
-    }
-
-
-    .nav-title {
-        font-size: 9px;
-
-        text-transform: uppercase;
-
-        color: #64728a;
-
-        letter-spacing: 1.3px;
-
-        padding: 0 10px;
-
-        margin-bottom: 9px;
-    }
-
-
-    .nav-menu {
-        list-style: none;
-
-        display: flex;
-        flex-direction: column;
-
-        gap: 5px;
-    }
-
-
-    .nav-item {
-        height: 44px;
-
-        display: flex;
-        align-items: center;
-
-        gap: 12px;
-
-        padding: 0 12px;
-
-        border-radius: 10px;
-
-        text-decoration: none;
-
-        color: #91a0b8;
-
-        font-size: 12px;
-
-        font-weight: 500;
-
-        transition: .2s ease;
-
-        position: relative;
-    }
-
-
-    .nav-icon {
-        width: 27px;
-        height: 27px;
-
-        border-radius: 8px;
-
-        display: flex;
-        align-items: center;
-        justify-content: center;
-
-        background: #19253c;
-
-        font-size: 13px;
-
-        flex-shrink: 0;
-    }
-
-
-    .nav-item:hover {
-        color: #ffffff;
-
-        background: #18243a;
-    }
-
-
-    .nav-item:hover .nav-icon {
-        background: #223352;
-    }
-
-
-    .nav-item.active {
-        color: #ffffff;
-
-        background: #1c2b47;
-    }
-
-
-    .nav-item.active::before {
-        content: "";
-
-        position: absolute;
-
-        left: 0;
-
-        width: 3px;
-        height: 22px;
-
-        border-radius: 0 5px 5px 0;
-
-        background: #4da3ff;
-    }
-
-
-    .nav-item.active .nav-icon {
-        background: #2468a9;
-
-        color: #ffffff;
-    }
-
-
-    .nav-lost .nav-icon {
-        color: #ff7676;
-    }
-
-
-    .nav-found .nav-icon {
-        color: #35d39a;
-    }
-
-
-    .sidebar-bottom {
-        margin-top: auto;
-
-        padding-top: 15px;
-
-        border-top: 1px solid #26334c;
-    }
-
-
-    .sidebar-bottom .nav-item:hover {
-        background: #241d2a;
-
-        color: #ff7f7f;
-    }
-
-
-    /* ==========================================
-       MOBILE MENU BUTTON
-    ========================================== */
-
-    .mobile-menu-btn {
-        display: none;
-
-        width: 38px;
-        height: 38px;
-
-        border: 1px solid #e2e7ed;
-
-        border-radius: 10px;
-
-        background: #ffffff;
-
-        cursor: pointer;
-
-        align-items: center;
-        justify-content: center;
-
-        flex-direction: column;
-
-        gap: 4px;
-
-        flex-shrink: 0;
-    }
-
-
-    .mobile-menu-btn span {
-        width: 17px;
-        height: 2px;
-
-        background: #172033;
-
-        border-radius: 5px;
-
-        transition: .2s ease;
-    }
-
-
-    /* ==========================================
-       MAIN CONTENT
-    ========================================== */
-
-    .main-content {
-        margin-left: 230px;
-
-        width: calc(100% - 230px);
-
-        min-height: 100vh;
-
-        display: flex;
-        flex-direction: column;
-
-        background: #f3f6fa;
-    }
-
-
-    /* ==========================================
-       TOPBAR
-    ========================================== */
-
-    .topbar {
-        min-height: 74px;
-
-        background: #ffffff;
-
-        border-bottom: 1px solid #e4e9ef;
-
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-
-        padding: 0 30px;
-
-        position: sticky;
-
-        top: 0;
-
-        z-index: 50;
-    }
-
-
-    .topbar-left {
-        display: flex;
-        align-items: center;
-
-        gap: 12px;
-
-        min-width: 0;
-    }
-
-
-    .topbar-title {
-        min-width: 0;
-    }
-
-
-    .topbar-title h1 {
-        font-size: 19px;
-
-        color: #172033;
-
-        font-weight: 750;
-    }
-
-
-    .topbar-title p {
-        font-size: 11px;
-
-        color: #8793a5;
-
-        margin-top: 3px;
-    }
-
-
-    .user-area {
-        display: flex;
-        align-items: center;
-
-        gap: 14px;
-
-        flex-shrink: 0;
-    }
-
-
-    .notification {
-        width: 35px;
-        height: 35px;
-
-        border: 1px solid #e2e7ed;
-
-        border-radius: 10px;
-
-        display: flex;
-        align-items: center;
-        justify-content: center;
-
-        background: #ffffff;
-
-        color: #64748b;
-
-        font-size: 14px;
-
-        position: relative;
-    }
-
-
-    .notification::after {
-        content: "";
-
-        width: 6px;
-        height: 6px;
-
-        border-radius: 50%;
-
-        background: #ff5c5c;
-
-        position: absolute;
-
-        top: 7px;
-        right: 7px;
-
-        border: 2px solid #ffffff;
-    }
-
-
-    .user-divider {
-        height: 32px;
-        width: 1px;
-
-        background: #e3e8ee;
-    }
-
-
-    .user-info {
-        text-align: right;
-    }
-
-
-    .user-name {
-        display: block;
-
-        font-size: 12px;
-
-        font-weight: 700;
-
-        color: #172033;
-    }
-
-
-    .user-role {
-        display: block;
-
-        font-size: 10px;
-
-        color: #8b96a7;
-
-        margin-top: 2px;
-    }
-
-
-    .avatar {
-        width: 37px;
-        height: 37px;
-
-        border-radius: 11px;
-
-        background: #1d6fc5;
-
-        color: #ffffff;
-
-        display: flex;
-        align-items: center;
-        justify-content: center;
-
-        font-size: 14px;
-
-        font-weight: 700;
-
-        box-shadow:
-            0 4px 10px
-            rgba(29, 111, 197, .18);
-    }
-
-
-    /* ==========================================
-       PAGE CONTENT
-    ========================================== */
-
-    .page-content {
-        width: 100%;
-
-        padding: 28px 30px 35px;
-    }
-
-
-    .page-intro {
-        margin-bottom: 20px;
-    }
-
-
-    .page-intro h2 {
-        font-size: 20px;
-
-        color: #172033;
-
-        font-weight: 750;
-
-        margin-bottom: 5px;
-    }
-
-
-    .page-intro p {
-        font-size: 11px;
-
-        color: #8793a5;
-
-        line-height: 1.6;
-    }
-
-
-    /* ==========================================
-       REPORT CARD
-    ========================================== */
-
-    .report-card {
-        width: 100%;
-
-        background: #ffffff;
-
-        border: 1px solid #e5eaf0;
-
-        border-radius: 15px;
-
-        overflow: hidden;
-
-        box-shadow:
-            0 4px 14px
-            rgba(25, 45, 70, .035);
-    }
-
-
-    .report-header {
-        display: flex;
-        align-items: center;
-
-        gap: 13px;
-
-        padding: 19px 21px;
-
-        border-bottom: 1px solid #edf0f4;
-    }
-
-
-    .report-header-icon {
-        width: 40px;
-        height: 40px;
-
-        border-radius: 11px;
-
-        background: #eafaf4;
-
-        color: #13a976;
-
-        display: flex;
-        align-items: center;
-        justify-content: center;
-
-        font-size: 17px;
-
-        font-weight: 800;
-
-        flex-shrink: 0;
-    }
-
-
-    .report-header-text h3 {
-        font-size: 13px;
-
-        color: #172033;
-
-        font-weight: 750;
-    }
-
-
-    .report-header-text p {
-        font-size: 9px;
-
-        color: #8b96a7;
-
-        margin-top: 3px;
-    }
-
-
-    /* ==========================================
-       FORM
-    ========================================== */
-
-    .report-form {
-        padding: 23px;
-    }
-
-
-    .error-message {
-        width: 100%;
-
-        padding: 11px 13px;
-
-        margin-bottom: 18px;
-
-        border-radius: 8px;
-
-        background: #fff0f0;
-
-        border: 1px solid #ffd4d4;
-
-        color: #d84949;
-
-        font-size: 10px;
-
-        line-height: 1.5;
-    }
-
-
-    .form-grid {
-        display: grid;
-
-        grid-template-columns:
-            repeat(2, minmax(0, 1fr));
-
-        gap: 18px;
-    }
-
-
-    .form-group {
-        min-width: 0;
-
-        display: flex;
-        flex-direction: column;
-    }
-
-
-    .form-group.full {
-        grid-column: 1 / -1;
-    }
-
-
-    .form-group label {
-        font-size: 10px;
-
-        font-weight: 700;
-
-        color: #344054;
-
-        margin-bottom: 7px;
-    }
-
-
-    .required {
-        color: #ef5350;
-    }
-
-
-    .form-group input,
-    .form-group textarea {
-        width: 100%;
-
-        border: 1px solid #dfe5ec;
-
-        background: #fbfcfd;
-
-        border-radius: 9px;
-
-        color: #172033;
-
-        font-size: 11px;
-
-        outline: none;
-
-        transition: .2s ease;
-    }
-
-
-    .form-group input {
-        height: 43px;
-
-        padding: 0 13px;
-    }
-
-
-    .form-group textarea {
-        min-height: 120px;
-
-        padding: 12px 13px;
-
-        resize: vertical;
-
-        line-height: 1.6;
-    }
-
-
-    .form-group input:focus,
-    .form-group textarea:focus {
-        border-color: #4da3ff;
-
-        background: #ffffff;
-
-        box-shadow:
-            0 0 0 3px
-            rgba(77, 163, 255, .08);
-    }
-
-
-    .form-group input::placeholder,
-    .form-group textarea::placeholder {
-        color: #a3adba;
-    }
-
-
-    /* ==========================================
-       FILE UPLOAD
-    ========================================== */
-
-    .file-upload {
-        width: 100%;
-
-        border: 1px dashed #cbd5e1;
-
-        border-radius: 10px;
-
-        background: #f8fafc;
-
-        padding: 14px;
-    }
-
-
-    .file-upload input {
-        height: auto;
-
-        border: none;
-
-        background: transparent;
-
-        padding: 0;
-
-        font-size: 10px;
-
-        box-shadow: none;
-    }
-
-
-    .file-upload input:focus {
-        box-shadow: none;
-    }
-
-
-    .file-note {
-        font-size: 9px;
-
-        color: #8b96a7;
-
-        margin-top: 7px;
-
-        line-height: 1.5;
-    }
-
-
-    /* ==========================================
-       INFORMATION BOX
-    ========================================== */
-
-    .form-info {
-        margin-top: 20px;
-
-        padding: 12px 14px;
-
-        border-radius: 9px;
-
-        background: #f3f8fd;
-
-        border: 1px solid #dcecf9;
-
-        color: #718096;
-
-        font-size: 9px;
-
-        line-height: 1.6;
-    }
-
-
-    .form-info strong {
-        color: #37678e;
-    }
-
-
-    /* ==========================================
-       BUTTONS
-    ========================================== */
-
-    .form-actions {
-        display: flex;
-
-        justify-content: flex-end;
-
-        gap: 9px;
-
-        margin-top: 22px;
-
-        padding-top: 18px;
-
-        border-top: 1px solid #edf0f4;
-    }
-
-
-    .form-btn {
-        min-height: 39px;
-
-        padding: 0 16px;
-
-        border-radius: 9px;
-
-        display: inline-flex;
-
-        align-items: center;
-        justify-content: center;
-
-        gap: 7px;
-
-        font-size: 10px;
-
-        font-weight: 700;
-
-        text-decoration: none;
-
-        border: none;
-
-        cursor: pointer;
-
-        transition: .2s ease;
-    }
-
-
-    .cancel-btn {
-        background: #f1f4f7;
-
-        color: #64748b;
-    }
-
-
-    .cancel-btn:hover {
-        background: #e7ebef;
-
-        color: #344054;
-    }
-
-
-    .submit-btn {
-        background: #19b982;
-
-        color: #ffffff;
-    }
-
-
-    .submit-btn:hover {
-        background: #12a774;
-
-        transform: translateY(-1px);
-
-        box-shadow:
-            0 5px 12px
-            rgba(25, 185, 130, .15);
-    }
-
-
-    /* ==========================================
-       TABLET
-    ========================================== */
-
-    @media screen and (max-width: 1000px) {
-
-        .sidebar {
-            width: 205px;
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Report Found Item - Lost &amp; Found</title>
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: Arial, Helvetica, sans-serif;
         }
 
-
-        .main-content {
-            margin-left: 205px;
-
-            width: calc(100% - 205px);
+        :root {
+            --primary: #1d6fc5;
+            --bg-surface: #ffffff;
+            --border-color: #e3e8ee;
+            --text-main: #172033;
+            --text-muted: #8793a5;
+            --background: #f3f6fa;
         }
 
-
-        .page-content {
-            padding: 23px;
+        html,
+        body {
+            width: 100%;
+            min-height: 100%;
         }
-
-
-        .topbar {
-            padding: 0 23px;
-        }
-
-    }
-
-
-    /* ==========================================
-       MOBILE
-    ========================================== */
-
-    @media screen and (max-width: 760px) {
 
         body {
+            background: var(--background);
+            color: var(--text-main);
             overflow-x: hidden;
         }
 
+        /* MOBILE MENU */
 
-        .dashboard {
-            display: block;
+        #menu-toggle {
+            display: none;
+        }
 
+        /* SIDEBAR - SAME AS STUDENT DASHBOARD */
+
+        .dashboard-wrapper {
+            display: flex;
+            width: 100%;
             min-height: 100vh;
         }
 
-
-        /* Hamburger */
-
-        .mobile-menu-btn {
-            display: flex;
-        }
-
-
-        /* Sidebar */
-
         .sidebar {
             position: fixed;
-
             top: 0;
             left: 0;
-
-            width: 270px;
+            width: 230px;
             height: 100vh;
-
-            transform:
-                translateX(-100%);
-
-            transition:
-                transform .25s ease;
-
-            box-shadow:
-                8px 0 25px
-                rgba(0, 0, 0, .18);
-
-            z-index: 200;
-
+            padding: 24px 16px;
+            background: #111a2d;
+            color: #ffffff;
+            display: flex;
+            flex-direction: column;
+            border-right: 1px solid #1f2b43;
             overflow-y: auto;
+            z-index: 200;
         }
 
-
-        /* Open sidebar */
-
-        #menu-toggle:checked
-        ~ .dashboard
-        .sidebar {
-
-            transform:
-                translateX(0);
+        .sidebar-brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 2px 8px 25px;
+            margin-bottom: 22px;
+            border-bottom: 1px solid #26334c;
+            text-decoration: none;
+            color: #ffffff;
         }
 
-
-        /* Overlay */
-
-        .menu-overlay {
-            display: block;
-
-            position: fixed;
-
-            inset: 0;
-
-            background:
-                rgba(8, 15, 28, .45);
-
-            opacity: 0;
-
-            visibility: hidden;
-
-            transition: .25s ease;
-
-            z-index: 150;
-
-            cursor: pointer;
+        .brand-icon {
+            width: 42px;
+            height: 42px;
+            flex-shrink: 0;
+            border-radius: 12px;
+            background: #2563eb;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #ffffff;
+            font-size: 13px;
+            font-weight: 800;
+            letter-spacing: 1px;
         }
 
-
-        #menu-toggle:checked
-        ~ .menu-overlay {
-
-            opacity: 1;
-
-            visibility: visible;
-        }
-
-
-        .main-content {
-            margin-left: 0;
-
-            width: 100%;
-
-            min-height: 100vh;
-        }
-
-
-        .topbar {
-            min-height: 65px;
-
-            padding: 0 17px;
-        }
-
-
-        .topbar-title {
+        .brand-text {
+            display: flex;
+            flex-direction: column;
             min-width: 0;
         }
 
-
-        .topbar-title h1 {
-            font-size: 16px;
-
-            white-space: nowrap;
-
-            overflow: hidden;
-
-            text-overflow: ellipsis;
+        .brand-text strong {
+            font-size: 13px;
+            letter-spacing: 1px;
+            color: #ffffff;
         }
 
-
-        .topbar-title p {
-            display: none;
+        .brand-text span {
+            font-size: 10px;
+            color: #75839b;
+            margin-top: 3px;
+            letter-spacing: .5px;
         }
 
-
-        .user-info,
-        .user-divider {
-            display: none;
+        .nav-title {
+            font-size: 9px;
+            text-transform: uppercase;
+            color: #64728a;
+            letter-spacing: 1.3px;
+            padding: 0 10px;
+            margin-bottom: 9px;
         }
 
-
-        .user-area {
-            gap: 8px;
+        .navigation {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
         }
 
-
-        .notification {
-            width: 34px;
-            height: 34px;
+        .nav-item {
+            min-height: 44px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 0 12px;
+            border-radius: 10px;
+            text-decoration: none;
+            color: #91a0b8;
+            font-size: 12px;
+            font-weight: 500;
+            transition: .2s ease;
+            position: relative;
         }
 
-
-        .avatar {
-            width: 35px;
-            height: 35px;
-        }
-
-
-        .page-content {
-            padding: 18px;
-        }
-
-
-        .page-intro h2 {
-            font-size: 18px;
-        }
-
-
-        .form-grid {
-            grid-template-columns: 1fr;
-
-            gap: 16px;
-        }
-
-
-        .form-group.full {
-            grid-column: auto;
-        }
-
-
-        .report-form {
-            padding: 19px;
-        }
-
-    }
-
-
-    /* ==========================================
-       SMALL PHONE
-    ========================================== */
-
-    @media screen and (max-width: 430px) {
-
-        .sidebar {
-            width: 285px;
-        }
-
-
-        .topbar {
-            padding: 0 14px;
-        }
-
-
-        .topbar-title h1 {
+        .nav-icon {
+            width: 27px;
+            height: 27px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #19253c;
             font-size: 14px;
+            flex-shrink: 0;
         }
 
-
-        .page-content {
-            padding: 14px;
+        .nav-item:hover {
+            color: #ffffff;
+            background: #18243a;
         }
 
+        .nav-item:hover .nav-icon {
+            background: #223352;
+        }
+
+        .nav-item.active {
+            color: #ffffff;
+            background: #1c2b47;
+        }
+
+        .nav-item.active::before {
+            content: "";
+            position: absolute;
+            left: 0;
+            width: 3px;
+            height: 22px;
+            border-radius: 0 5px 5px 0;
+            background: #4da3ff;
+        }
+
+        .nav-item.active .nav-icon {
+            background: #2468a9;
+            color: #ffffff;
+        }
+
+        .nav-lost .nav-icon {
+            color: #ff7676;
+        }
+
+        .nav-found .nav-icon {
+            color: #35d39a;
+        }
+
+        .sidebar-bottom {
+            margin-top: auto;
+            padding-top: 15px;
+            border-top: 1px solid #26334c;
+        }
+
+        .sidebar-bottom .nav-item:hover {
+            background: #241d2a;
+            color: #ff7f7f;
+        }
+
+        /* MOBILE MENU BUTTON AND OVERLAY */
+
+        .mobile-menu-btn {
+            display: none;
+            width: 38px;
+            height: 38px;
+            border: 1px solid #e2e7ed;
+            border-radius: 10px;
+            background: #ffffff;
+            cursor: pointer;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            gap: 4px;
+            flex-shrink: 0;
+        }
+
+        .mobile-menu-btn span {
+            width: 17px;
+            height: 2px;
+            background: #172033;
+            border-radius: 5px;
+        }
+
+        .menu-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(8, 15, 28, .45);
+            opacity: 0;
+            visibility: hidden;
+            transition: .25s ease;
+            z-index: 150;
+            cursor: pointer;
+        }
+
+        /* MAIN WORKSPACE */
+
+        .main-wrapper {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            min-width: 0;
+            width: calc(100% - 230px);
+            min-height: 100vh;
+            margin-left: 230px;
+        }
+
+        /* TOP HEADER - SAME AS STUDENT DASHBOARD */
+
+        .top-header {
+            min-height: 74px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 15px;
+            padding: 12px 30px;
+            background: var(--bg-surface);
+            border-bottom: 1px solid var(--border-color);
+            position: sticky;
+            top: 0;
+            z-index: 50;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            min-width: 0;
+        }
+
+        .header-title {
+            min-width: 0;
+        }
+
+        .header-title h1 {
+            font-size: 19px;
+            font-weight: 750;
+            color: var(--text-main);
+            line-height: 1.4;
+        }
+
+        .header-title p {
+            font-size: 11px;
+            color: var(--text-muted);
+            margin-top: 3px;
+        }
+
+        .content-body {
+            padding: 28px 30px 35px;
+            width: 100%;
+            max-width: 1100px;
+            margin: 0 auto;
+        }
 
         .page-intro {
-            margin-bottom: 16px;
+            background: linear-gradient(to right, #1e3a8a, #0f172a);
+            border-radius: 12px;
+            padding: 24px;
+            color: #ffffff;
+            margin-bottom: 24px;
+            box-shadow: 0 3px 8px rgba(15, 23, 42, .1);
         }
-
 
         .page-intro h2 {
-            font-size: 17px;
+            font-size: 19px;
+            font-weight: 750;
         }
-
 
         .page-intro p {
-            font-size: 10px;
+            font-size: 11px;
+            color: #cbd5e1;
+            margin-top: 6px;
+            line-height: 1.7;
+            max-width: 650px;
         }
 
+        .report-card {
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, .04);
+        }
 
         .report-header {
-            padding: 16px;
+            padding: 20px 22px;
+            border-bottom: 1px solid #f1f5f9;
+            display: flex;
+            align-items: center;
+            gap: 13px;
         }
-
-
-        .report-form {
-            padding: 16px;
-        }
-
 
         .report-header-icon {
-            width: 36px;
-            height: 36px;
-
-            font-size: 15px;
+            width: 42px;
+            height: 42px;
+            border-radius: 10px;
+            background: #eff6ff;
+            color: #2563eb;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            font-weight: 700;
+            flex-shrink: 0;
         }
 
+        .report-header-text h3 {
+            font-size: 14px;
+            color: #0f172a;
+            font-weight: 750;
+        }
 
-        .form-actions {
-            flex-direction: column-reverse;
+        .report-header-text p {
+            font-size: 10px;
+            color: #64748b;
+            margin-top: 3px;
+        }
 
+        .report-form {
+            padding: 24px 22px 22px;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 20px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            min-width: 0;
+        }
+
+        .form-group.full {
+            grid-column: 1 / -1;
+        }
+
+        .form-group label {
+            font-size: 11px;
+            font-weight: 700;
+            color: #334155;
+            margin-bottom: 7px;
+        }
+
+        .required {
+            color: #f43f5e;
+        }
+
+        .optional {
+            color: #94a3b8;
+            font-weight: 400;
+        }
+
+        .form-group input,
+        .form-group textarea {
             width: 100%;
+            padding: 11px 13px;
+            border: 1px solid #cbd5e1;
+            border-radius: 8px;
+            background: #ffffff;
+            color: #172033;
+            font-family: inherit;
+            font-size: 12px;
+            outline: none;
+            transition: .2s ease;
         }
 
-
-        .form-btn {
-            width: 100%;
+        .form-group input {
+            min-height: 42px;
         }
-
 
         .form-group textarea {
             min-height: 110px;
+            resize: vertical;
+            line-height: 1.6;
         }
 
-    }
+        .form-group input:focus,
+        .form-group textarea:focus {
+            border-color: #2563eb;
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, .1);
+        }
 
-</style>
+        .form-group input::placeholder,
+        .form-group textarea::placeholder {
+            color: #94a3b8;
+        }
 
+        .file-upload {
+            border: 2px dashed #cbd5e1;
+            background: #f8fafc;
+            border-radius: 8px;
+            padding: 16px;
+            transition: .2s ease;
+        }
+
+        .file-upload:hover {
+            background: #f1f5f9;
+        }
+
+        .file-upload input {
+            width: 100%;
+            border: none;
+            padding: 0;
+            min-height: auto;
+            background: transparent;
+            font-size: 11px;
+        }
+
+        .file-note {
+            font-size: 10px;
+            color: #94a3b8;
+            margin-top: 9px;
+            line-height: 1.5;
+        }
+
+        .form-info {
+            margin-top: 22px;
+            padding: 14px;
+            border-radius: 8px;
+            background: #fffbeb;
+            border: 1px solid #fde68a;
+            color: #92400e;
+            font-size: 11px;
+            line-height: 1.7;
+        }
+
+        .form-info strong {
+            color: #78350f;
+        }
+
+        .error-message {
+            margin-bottom: 20px;
+            padding: 13px 14px;
+            border-radius: 8px;
+            background: #fff1f2;
+            border-left: 4px solid #f43f5e;
+            color: #be123c;
+            font-size: 11px;
+            line-height: 1.6;
+        }
+
+        .form-actions {
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 22px;
+            padding-top: 20px;
+            border-top: 1px solid #f1f5f9;
+        }
+
+        .form-btn {
+            min-height: 40px;
+            padding: 0 18px;
+            border: 1px solid transparent;
+            border-radius: 8px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-family: inherit;
+            font-size: 11px;
+            font-weight: 700;
+            text-decoration: none;
+            cursor: pointer;
+            transition: .2s ease;
+        }
+
+        .cancel-btn {
+            background: #ffffff;
+            color: #475569;
+            border-color: #e2e8f0;
+        }
+
+        .cancel-btn:hover {
+            background: #f8fafc;
+        }
+
+        .submit-btn {
+            background: #2563eb;
+            color: #ffffff;
+        }
+
+        .submit-btn:hover {
+            background: #1d4ed8;
+            transform: translateY(-1px);
+        }
+
+        /* TABLET */
+
+        @media screen and (max-width: 1000px) {
+            .sidebar {
+                width: 205px;
+            }
+
+            .main-wrapper {
+                width: calc(100% - 205px);
+                margin-left: 205px;
+            }
+
+            .top-header {
+                padding: 12px 23px;
+            }
+
+            .content-body {
+                padding: 23px;
+            }
+        }
+
+        /* MOBILE - SAME NAVIGATION AS DASHBOARD */
+
+        @media screen and (max-width: 760px) {
+            .dashboard-wrapper {
+                display: block;
+            }
+
+            .sidebar {
+                width: 270px;
+                max-width: 85vw;
+                transform: translateX(-100%);
+                transition: transform .25s ease;
+                box-shadow: 8px 0 25px rgba(0, 0, 0, .18);
+                z-index: 200;
+            }
+
+            #menu-toggle:checked ~ .dashboard-wrapper .sidebar {
+                transform: translateX(0);
+            }
+
+            #menu-toggle:checked ~ .menu-overlay {
+                opacity: 1;
+                visibility: visible;
+            }
+
+            .menu-overlay {
+                display: block;
+            }
+
+            .mobile-menu-btn {
+                display: flex;
+            }
+
+            .main-wrapper {
+                width: 100%;
+                margin-left: 0;
+            }
+
+            .top-header {
+                min-height: 65px;
+                padding: 10px 17px;
+            }
+
+            .header-title h1 {
+                font-size: 16px;
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
+            }
+
+            .header-title p {
+                display: none;
+            }
+
+            .content-body {
+                padding: 20px 17px 30px;
+            }
+
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .form-group.full {
+                grid-column: auto;
+            }
+
+            .page-intro {
+                padding: 20px;
+            }
+
+            .report-form {
+                padding: 20px;
+            }
+
+            .report-header {
+                padding: 18px 20px;
+            }
+        }
+
+        @media screen and (max-width: 430px) {
+            .top-header {
+                padding: 10px 13px;
+                gap: 8px;
+            }
+
+            .header-title h1 {
+                font-size: 14px;
+            }
+
+            .content-body {
+                padding: 17px 13px 25px;
+            }
+
+            .page-intro {
+                padding: 18px;
+            }
+
+            .page-intro h2 {
+                font-size: 17px;
+            }
+
+            .report-form {
+                padding: 17px 15px;
+            }
+
+            .report-header {
+                padding: 16px 15px;
+            }
+
+            .form-actions {
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+            }
+
+            .form-btn {
+                padding: 0 10px;
+                width: 100%;
+            }
+        }
+
+        @media screen and (max-width: 350px) {
+            
+            .mobile-menu-btn {
+                width: 34px;
+                height: 34px;
+            }
+
+            .header-left {
+                gap: 7px;
+            }
+
+            .header-title h1 {
+                font-size: 12px;
+            }
+
+            .form-actions {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+    <link rel="stylesheet" href="../../responsive.css">
 </head>
 
 <body>
 
-<!-- Mobile Menu Control -->
+<input type="checkbox" id="menu-toggle">
 
-<input
-type="checkbox"
-id="menu-toggle"
+<div class="dashboard-wrapper">
 
->
+    <aside class="sidebar">
 
-<div class="dashboard">
+        <a class="sidebar-brand">
 
-<aside class="sidebar">
-
-
-    <a
-        href="students.php"
-        class="brand-link"
-    >
-
-        <div class="brand">
-
-
-            <div class="brand-mark"></div>
-
+            <div class="brand-icon">SLF</div>
 
             <div class="brand-text">
-
-                <strong>
-                    LOST &amp; FOUND
-                </strong>
-
-                <span>
-                    STUDENT PORTAL
-                </span>
-
+                <strong>LOST &amp; FOUND</strong>
+                <span>STUDENT PORTAL</span>
             </div>
-
-
-        </div>
-
-    </a>
-
-
-    <div class="nav-title">
-        Main Menu
-    </div>
-
-
-    <ul class="nav-menu">
-
-
-        <li>
-
-            <a
-                href="students.php"
-                class="nav-item"
-            >
-
-                <span class="nav-icon">
-                    ⌂
-                </span>
-
-                <span>
-                    Dashboard
-                </span>
-
-            </a>
-
-        </li>
-
-
-        <li>
-
-            <a
-                href="report_lost.php"
-                class="nav-item nav-lost"
-            >
-
-                <span class="nav-icon">
-                    ⌕
-                </span>
-
-                <span>
-                    Report Lost Item
-                </span>
-
-            </a>
-
-        </li>
-
-
-        <li>
-
-            <a
-                href="report_found.php"
-                class="nav-item nav-found active"
-            >
-
-                <span class="nav-icon">
-                    □
-                </span>
-
-                <span>
-                    Report Found Item
-                </span>
-
-            </a>
-
-        </li>
-
-
-        <li>
-
-            <a
-                href="my_reports.php"
-                class="nav-item"
-            >
-
-                <span class="nav-icon">
-                    ▤
-                </span>
-
-                <span>
-                    My Reports
-                </span>
-
-            </a>
-
-        </li>
-
-
-        <li>
-
-            <a
-                href="profile.php"
-                class="nav-item"
-            >
-
-                <span class="nav-icon">
-                    ○
-                </span>
-
-                <span>
-                    Profile
-                </span>
-
-            </a>
-
-        </li>
-
-
-    </ul>
-
-
-    <div class="sidebar-bottom">
-
-
-        <a
-            href="../../authentication/logout.php"
-            class="nav-item"
-            onclick="return confirmLogout();"
-        >
-
-            <span class="nav-icon">
-                ↪
-            </span>
-
-            <span>
-                Log Out
-            </span>
 
         </a>
 
+        <div class="nav-title">Main Menu</div>
 
-    </div>
+        <nav class="navigation">
 
+            <a href="student_dashboard.php" class="nav-item">
+                <span class="nav-icon">⌂</span>
+                <span>Dashboard</span>
+            </a>
 
-</aside>
+            <a href="report_lost.php" class="nav-item nav-lost">
+                <span class="nav-icon">⌕</span>
+                <span>Report Lost Item</span>
+            </a>
 
+            <a href="report_found.php" class="nav-item nav-found active">
+                <span class="nav-icon">□</span>
+                <span>Report Found Item</span>
+            </a>
 
-<!-- Mobile Overlay -->
+            <a href="my_reports.php" class="nav-item">
+                <span class="nav-icon">▤</span>
+                <span>My Reports</span>
+            </a>
 
-<label
-    for="menu-toggle"
-    class="menu-overlay"
-></label>
+            <a href="profile.php" class="nav-item">
+                <span class="nav-icon">○</span>
+                <span>Profile</span>
+            </a>
 
+        </nav>
 
-<!-- ==========================================
-     MAIN CONTENT
-========================================== -->
+        <div class="sidebar-bottom">
 
-<main class="main-content">
+            <a href="../../authentication/logout.php"
+               class="nav-item"
+               onclick="return confirmLogout();">
 
+                <span class="nav-icon">↪</span>
+                <span>Log Out</span>
 
-    <header class="topbar">
-
-
-        <div class="topbar-left">
-
-
-            <!-- Hamburger -->
-
-            <label
-                for="menu-toggle"
-                class="mobile-menu-btn"
-            >
-
-                <span></span>
-                <span></span>
-                <span></span>
-
-            </label>
-
-
-            <div class="topbar-title">
-
-                <h1>
-                    Report Found Item
-                </h1>
-
-                <p>
-                    Submit information about an item you have found.
-                </p>
-
-            </div>
-
+            </a>
 
         </div>
 
+    </aside>
 
-        <div class="user-area">
+    <label for="menu-toggle" class="menu-overlay"></label>
 
+    <main class="main-wrapper">
 
-            <div class="notification">
-                ♢
-            </div>
+        <header class="top-header">
 
+            <div class="header-left">
 
-            <div class="user-divider"></div>
+                <label for="menu-toggle"
+                       class="mobile-menu-btn"
+                       aria-label="Open navigation menu">
 
+                    <span></span>
+                    <span></span>
+                    <span></span>
 
-            <div class="user-info">
+                </label>
 
-                <span class="user-name">
-
-                    <?php
-                    echo htmlspecialchars($fullname);
-                    ?>
-
-                </span>
-
-
-                <span class="user-role">
-                    Student Account
-                </span>
-
-            </div>
-
-
-            <div class="avatar">
-
-                <?php
-                echo strtoupper(
-                    substr($fullname, 0, 1)
-                );
-                ?>
-
-            </div>
-
-
-        </div>
-
-
-    </header>
-
-
-    <!-- ==========================================
-         PAGE CONTENT
-    ========================================== -->
-
-    <div class="page-content">
-
-
-        <div class="page-intro">
-
-            <h2>
-                Report a Found Item
-            </h2>
-
-            <p>
-                Provide accurate information about the item
-                you found so its owner can be identified
-                and contacted.
-            </p>
-
-        </div>
-
-
-        <section class="report-card">
-
-
-            <div class="report-header">
-
-
-                <div class="report-header-icon">
-                    +
+                <div class="header-title">
+                    <h1>Report Found Item</h1>
+                    <p>Submit information about an item you have found on campus.</p>
                 </div>
+            </div>
+        </header>
 
+        <div class="content-body">
 
-                <div class="report-header-text">
+            <section class="report-card">
 
-                    <h3>
-                        Found Item Information
-                    </h3>
+                <div class="report-header">
 
-                    <p>
-                        Fill in the required information below.
-                    </p>
+                    <div class="report-header-icon">+</div>
+
+                    <div class="report-header-text">
+                        <h3>Found Item Information</h3>
+                        <p>Fill in the required information below.</p>
+                    </div>
 
                 </div>
 
+                <form method="POST" enctype="multipart/form-data" class="report-form">
 
-            </div>
+                    <?php if (!empty($message)) { ?>
 
+                        <div class="error-message">
+                            <?php echo htmlspecialchars($message); ?>
+                        </div>
 
-            <form
-                method="POST"
-                enctype="multipart/form-data"
-                class="report-form"
-            >
+                    <?php } ?>
 
+                    <div class="form-grid">
 
-                <?php if (!empty($message)) { ?>
+                        <div class="form-group">
 
-                    <div class="error-message">
-
-                        <?php
-                        echo htmlspecialchars($message);
-                        ?>
-
-                    </div>
-
-                <?php } ?>
-
-
-                <div class="form-grid">
-
-
-                    <!-- ITEM NAME -->
-
-                    <div class="form-group">
-
-
-                        <label>
-
-                            Item Name
-
-                            <span class="required">
-                                *
-                            </span>
-
-                        </label>
-
-
-                        <input
-                            type="text"
-                            name="item_name"
-                            placeholder="Example: Black Wallet"
-                            value="<?php
-                                echo isset($_POST['item_name'])
-                                    ? htmlspecialchars($_POST['item_name'])
-                                    : '';
-                            ?>"
-                            required
-                        >
-
-
-                    </div>
-
-
-                    <!-- DATE FOUND -->
-
-                    <div class="form-group">
-
-
-                        <label>
-
-                            Date Found
-
-                            <span class="required">
-                                *
-                            </span>
-
-                        </label>
-
-
-                        <input
-                            type="date"
-                            name="date_found"
-                            max="<?php
-                                echo date('Y-m-d');
-                            ?>"
-                            value="<?php
-                                echo isset($_POST['date_found'])
-                                    ? htmlspecialchars($_POST['date_found'])
-                                    : '';
-                            ?>"
-                            required
-                        >
-
-
-                    </div>
-
-
-                    <!-- LOCATION FOUND -->
-
-                    <div class="form-group full">
-
-
-                        <label>
-
-                            Location Found
-
-                            <span class="required">
-                                *
-                            </span>
-
-                        </label>
-
-
-                        <input
-                            type="text"
-                            name="location_found"
-                            placeholder="Example: Library, Cafeteria, Room 204"
-                            value="<?php
-                                echo isset($_POST['location_found'])
-                                    ? htmlspecialchars($_POST['location_found'])
-                                    : '';
-                            ?>"
-                            required
-                        >
-
-
-                    </div>
-
-
-                    <!-- DESCRIPTION -->
-
-                    <div class="form-group full">
-
-
-                        <label>
-
-                            Description
-
-                            <span class="required">
-                                *
-                            </span>
-
-                        </label>
-
-
-                        <textarea
-                            name="description"
-                            placeholder="Describe the item's color, brand, size, design, markings, or other identifying details."
-                            required
-                        ><?php
-                            echo isset($_POST['description'])
-                                ? htmlspecialchars($_POST['description'])
-                                : '';
-                        ?></textarea>
-
-
-                    </div>
-
-
-                    <!-- IMAGE -->
-
-                    <div class="form-group full">
-
-
-                        <label>
-
-                            Upload Image
-
-                            <span
-                                style="color:#9aa5b4;"
-                            >
-                                (Optional)
-                            </span>
-
-                        </label>
-
-
-                        <div class="file-upload">
-
+                            <label>
+                                Item Name <span class="required">*</span>
+                            </label>
 
                             <input
-                                type="file"
-                                name="image"
-                                accept=".jpg,.jpeg,.png,.webp,image/*"
+                                type="text"
+                                name="item_name"
+                                placeholder="Example: Black Wallet"
+                                value="<?php echo isset($_POST['item_name']) ? htmlspecialchars($_POST['item_name']) : ''; ?>"
+                                required
                             >
-
-
-                            <div class="file-note">
-
-                                Upload a clear image of the
-                                found item if available.
-                                Maximum file size: 2MB.
-
-                            </div>
-
 
                         </div>
 
+                        <!-- DATE FOUND -->
+
+                        <div class="form-group">
+
+                            <label>
+                                Date Found <span class="required">*</span>
+                            </label>
+
+                            <input
+                                type="date"
+                                name="date_found"
+                                max="<?php echo date('Y-m-d'); ?>"
+                                value="<?php echo isset($_POST['date_found']) ? htmlspecialchars($_POST['date_found']) : ''; ?>"
+                                required
+                            >
+
+                        </div>
+
+                        <div class="form-group full">
+
+                            <label>
+                                Location Found <span class="required">*</span>
+                            </label>
+
+                            <input
+                                type="text"
+                                name="location_found"
+                                placeholder="Example: Library, Cafeteria, Room 204"
+                                value="<?php echo isset($_POST['location_found']) ? htmlspecialchars($_POST['location_found']) : ''; ?>"
+                                required
+                            >
+
+                        </div>
+
+                        <div class="form-group full">
+
+                            <label>
+                                Description <span class="required">*</span>
+                            </label>
+
+                            <textarea
+                                name="description"
+                                rows="3"
+                                placeholder="Describe the item's color, brand, size, design, markings, or other identifying details."
+                                required
+                            ><?php echo isset($_POST['description']) ? htmlspecialchars($_POST['description']) : ''; ?></textarea>
+
+                        </div>
+
+                        <!-- FILE UPLOAD -->
+
+                        <div class="form-group full">
+
+                            <label>
+                                Upload Image
+                                <span class="optional">(Optional)</span>
+                            </label>
+
+                            <div class="file-upload">
+
+                                <input
+                                    type="file"
+                                    name="image"
+                                    accept=".jpg,.jpeg,.png,.webp,image/*"
+                                >
+
+                                <p class="file-note">
+                                    Upload a clear image of the found item if available.
+                                    Maximum file size: 2MB (JPG, JPEG, PNG, WEBP).
+                                </p>
+
+                            </div>
+
+                        </div>
 
                     </div>
 
+                    <div class="form-info">
+                        <strong>Important:</strong>
+                        Please provide truthful and accurate information.
+                    
+                    </div>
 
-                </div>
+                    <div class="form-actions">
 
+                        <a href="student_dashboard.php"
+                           class="form-btn cancel-btn">
+                            Cancel
+                        </a>
 
-                <!-- INFORMATION -->
+                        <button type="submit"
+                                name="submit"
+                                class="form-btn submit-btn">
+                            Submit Report
+                        </button>
 
-                <div class="form-info">
+                    </div>
 
-                    <strong>
-                        Important:
-                    </strong>
+                </form>
 
-                    Please provide truthful and accurate
-                    information. Do not include unnecessary
-                    personal information about the person
-                    who may own the item.
+            </section>
 
-                </div>
+        </div>
 
-
-                <!-- BUTTONS -->
-
-                <div class="form-actions">
-
-
-                    <a
-                        href="students.php"
-                        class="form-btn cancel-btn"
-                    >
-                        Cancel
-
-                    </a>
-
-
-                    <button
-                        type="submit"
-                        name="submit"
-                        class="form-btn submit-btn"
-                    >
-
-                        Submit Report
-
-                    </button>
-
-
-                </div>
-
-
-            </form>
-
-
-        </section>
-
-
-    </div>
-
-
-</main>
-```
+    </main>
 
 </div>
 
 <script>
-
 function confirmLogout() {
-
-    return confirm(
-        "Are you sure you want to log out?"
-    );
-
+    return confirm("Are you sure you want to log out?");
 }
-
 </script>
 
 </body>
-
 </html>

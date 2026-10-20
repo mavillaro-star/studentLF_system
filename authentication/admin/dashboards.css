@@ -34,20 +34,10 @@ a {
     color: inherit;
 }
 
-
-/* =========================
-   MAIN LAYOUT
-========================= */
-
 .dashboard-wrapper {
     min-height: 100vh;
     display: flex;
 }
-
-
-/* =========================
-   SIDEBAR
-========================= */
 
 .sidebar {
     width: 260px;
@@ -144,10 +134,8 @@ a {
 
 .nav-icon {
     width: 22px;
-
     display: flex;
     justify-content: center;
-
     font-size: 17px;
 }
 
@@ -254,84 +242,6 @@ a {
 }
 
 
-/* =========================
-   NOTIFICATION
-========================= */
-
-.dropdown-wrapper {
-    position: relative;
-}
-
-.icon-button {
-    width: 43px;
-    height: 43px;
-
-    border: 1px solid var(--border);
-
-    border-radius: 50%;
-
-    background: white;
-
-    display: flex;
-    align-items: center;
-    justify-content: center;
-
-    cursor: pointer;
-
-    position: relative;
-
-    transition: 0.2s;
-}
-
-.icon-button:hover {
-    background: #f8fafc;
-    border-color: #cbd5e1;
-}
-
-.bell-icon {
-    width: 20px;
-    height: 20px;
-
-    fill: none;
-    stroke: #334155;
-    stroke-width: 1.8;
-
-    stroke-linecap: round;
-    stroke-linejoin: round;
-}
-
-.notification-badge {
-    position: absolute;
-
-    top: -3px;
-    right: -3px;
-
-    min-width: 19px;
-    height: 19px;
-
-    padding: 0 5px;
-
-    border-radius: 20px;
-
-    background: var(--red);
-
-    color: white;
-
-    font-size: 9px;
-    font-weight: 700;
-
-    display: flex;
-    align-items: center;
-    justify-content: center;
-
-    border: 2px solid white;
-}
-
-
-/* =========================
-   PROFILE
-========================= */
-
 .profile-button {
     border: none;
     background: transparent;
@@ -428,36 +338,7 @@ a {
 }
 
 
-/* NOTIFICATION DROPDOWN */
-
-.notification-dropdown {
-    width: 340px;
-}
-
-.dropdown-header {
-    padding: 17px 18px;
-
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-
-    border-bottom: 1px solid var(--border);
-}
-
-.dropdown-header h3 {
-    font-size: 14px;
-}
-
-.dropdown-header span {
-    display: block;
-
-    margin-top: 3px;
-
-    color: var(--muted);
-
-    font-size: 11px;
-}
-
+/* 
 .notification-total {
     min-width: 28px !important;
     height: 28px;
@@ -563,12 +444,12 @@ a {
     color: var(--muted);
 
     font-size: 11px;
-}
+} */
 
 
 /* PROFILE DROPDOWN */
 
-.profile-dropdown {
+/* .profile-dropdown {
     width: 290px;
 }
 
@@ -581,7 +462,7 @@ a {
     gap: 12px;
 
     border-bottom: 1px solid var(--border);
-}
+} */
 
 .large-profile-circle {
     width: 43px;
@@ -600,7 +481,7 @@ a {
     font-weight: 800;
 }
 
-.profile-dropdown-header strong {
+/* .profile-dropdown-header strong {
     display: block;
 
     font-size: 13px;
@@ -614,9 +495,9 @@ a {
     color: var(--muted);
 
     font-size: 11px;
-}
+} */
 
-.profile-menu {
+/* .profile-menu {
     padding: 7px;
 }
 
@@ -672,7 +553,7 @@ a {
 
 .profile-menu .profile-logout > span {
     background: #fef2f2;
-}
+} */
 
 
 /* =========================

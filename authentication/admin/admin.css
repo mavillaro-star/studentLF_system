@@ -99,7 +99,6 @@ a {
 .sidebar-brand span {
     display: block;
     margin-top: 3px;
-
     color: #94a3b8;
     font-size: 11px;
 }
@@ -144,10 +143,8 @@ a {
 
 .nav-icon {
     width: 22px;
-
     display: flex;
     justify-content: center;
-
     font-size: 17px;
 }
 

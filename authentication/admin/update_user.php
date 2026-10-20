@@ -2,13 +2,13 @@
 session_start();
 include '../../db.php';
 
-// Check if logged in and admin
+
 if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'admin') {
     header('Location: ../login.php');
     exit();
 }
 
-// Restrict access to POST requests
+
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     header('Location: manage_users.php');
     exit();
@@ -29,12 +29,12 @@ if ($id <= 0) {
     exit();
 }
 
-// Handle profile picture upload safely
+
 $profile_picture = null;
 if (isset($_FILES['profile_picture']) && $_FILES['profile_picture']['error'] === UPLOAD_ERR_OK) {
     $targetDir = "../../uploads/profile_pics/";
     
-    // Create upload directory if it doesn't exist
+    
     if (!is_dir($targetDir)) {
         mkdir($targetDir, 0755, true);
     }
@@ -48,7 +48,7 @@ if (isset($_FILES['profile_picture']) && $_FILES['profile_picture']['error'] ===
     }
 }
 
-// Dynamic query construction based on provided inputs
+
 if (!empty($password)) {
     $hashedPassword = password_hash($password, PASSWORD_DEFAULT);
 

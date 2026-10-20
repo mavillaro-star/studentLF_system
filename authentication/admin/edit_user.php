@@ -1,4 +1,3 @@
-```php
 <?php
 session_start();
 include '../../db.php';
@@ -57,8 +56,24 @@ $years = [
     '4th Yr' => '4th Yr'
 ];
 
-$fullname = $_SESSION['fullname'] ?? 'Admin';
-$adminInitial = strtoupper(substr(trim($fullname), 0, 1));
+
+$lost_count = 0;
+$found_count = 0;
+$modals = [];
+
+$lost_result = mysqli_query($conn, "SELECT COUNT(*) AS total FROM lost_items");
+
+if ($lost_result) {
+    $lost_data = mysqli_fetch_assoc($lost_result);
+    $lost_count = (int)($lost_data['total'] ?? 0);
+}
+
+$found_result = mysqli_query($conn, "SELECT COUNT(*) AS total FROM found_items");
+
+if ($found_result) {
+    $found_data = mysqli_fetch_assoc($found_result);
+    $found_count = (int)($found_data['total'] ?? 0);
+}
 ?>
 
 <!DOCTYPE html>
@@ -98,43 +113,6 @@ $adminInitial = strtoupper(substr(trim($fullname), 0, 1));
             margin-top: 5px;
             color: var(--muted);
             font-size: 13px;
-        }
-
-        .edit-admin-profile {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .edit-admin-info {
-            display: flex;
-            flex-direction: column;
-            align-items: flex-end;
-        }
-
-        .edit-admin-name {
-            color: var(--text);
-            font-size: 13px;
-            font-weight: 700;
-        }
-
-        .edit-admin-role {
-            margin-top: 3px;
-            color: var(--muted);
-            font-size: 11px;
-        }
-
-        .edit-admin-avatar {
-            width: 38px;
-            height: 38px;
-            border-radius: 50%;
-            background: var(--red);
-            color: #fff;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 14px;
-            font-weight: 700;
         }
 
         .edit-toolbar {
@@ -411,15 +389,6 @@ $adminInitial = strtoupper(substr(trim($fullname), 0, 1));
                 margin-bottom: 20px;
             }
 
-            .edit-admin-info {
-                display: none;
-            }
-
-            .edit-admin-avatar {
-                width: 36px;
-                height: 36px;
-            }
-
             .edit-form-header {
                 padding: 18px 20px;
             }
@@ -539,9 +508,13 @@ $adminInitial = strtoupper(substr(trim($fullname), 0, 1));
             }
         }
     </style>
+    <link rel="stylesheet" href="../../responsive.css">
 </head>
 
-<body>
+<body class="admin-sidebar-page">
+<input type="checkbox" id="admin-menu-toggle" aria-label="Toggle navigation menu">
+<label class="mobile-sidebar-toggle" for="admin-menu-toggle" aria-label="Toggle navigation menu">☰</label>
+<label class="mobile-sidebar-overlay" for="admin-menu-toggle" aria-hidden="true"></label>
 
 <div class="dashboard-wrapper">
 
@@ -571,27 +544,40 @@ $adminInitial = strtoupper(substr(trim($fullname), 0, 1));
             <a href="view_lost.php" class="nav-item">
                 <span class="nav-icon">▣</span>
                 <span>Lost Item Reports</span>
+
+                <?php if ($lost_count > 0): ?>
+                    <span class= "nav-count">
+                        <?php echo $lost_count; ?>
+                    </span>
+                <?php endif; ?>
             </a>
 
             <a href="view_found.php" class="nav-item">
                 <span class="nav-icon">⌕</span>
                 <span>Found Item Reports</span>
+                <?php if ($found_count > 0): ?>
+                    <span class="nav-count">
+                        <?php echo $found_count; ?>
+                    </span>
+                <?php endif;?>
             </a>
 
             <a href="admin_profile.php" class="nav-item">
-                <span class="nav-icon">👤</span>
+                <span class="nav-icon">○</span>
                 <span>My Profile</span>
             </a>
 
         </nav>
 
         <div class="sidebar-bottom">
-            <a href="logout.php" class="logout-link">
-                <span>↪</span>
+
+            <a href="../../authentication/logout.php" class="nav-item"
+             onclick="return confirmLogout();">
+                <span class="nav-icon">↪</span>
                 <span>Log Out</span>
             </a>
-        </div>
 
+        </div>
     </aside>
 
 
@@ -602,24 +588,6 @@ $adminInitial = strtoupper(substr(trim($fullname), 0, 1));
             <div class="edit-heading">
                 <h1>Edit User</h1>
                 <p>Update account information and profile settings.</p>
-            </div>
-
-            <div class="edit-admin-profile">
-
-                <div class="edit-admin-info">
-                    <span class="edit-admin-name">
-                        <?php echo htmlspecialchars($fullname); ?>
-                    </span>
-
-                    <span class="edit-admin-role">
-                        Administrator
-                    </span>
-                </div>
-
-                <div class="edit-admin-avatar">
-                    <?php echo htmlspecialchars($adminInitial); ?>
-                </div>
-
             </div>
 
         </header>
@@ -920,6 +888,11 @@ if (imageInput && imagePreview) {
 
         reader.readAsDataURL(file);
     });
+}
+</script>
+ <script>
+function confirmLogout() {
+    return confirm("Are you sure you want to log out?");
 }
 </script>
 

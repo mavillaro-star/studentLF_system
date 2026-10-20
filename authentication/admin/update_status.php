@@ -2,7 +2,6 @@
 session_start();
 include '../../db.php';
 
-// Check if logged in and admin
 if (!isset($_SESSION['user_id']) || $_SESSION['role'] != "admin") {
     header("Location: ../login.php");
     exit();
@@ -13,13 +12,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $type = $_POST['type'] ?? ''; // 'lost' or 'found'
     $new_status = $_POST['status'] ?? '';
 
-    // Validate table name to prevent SQL injection
+    
     $allowed_tables = ['lost' => 'lost_items', 'found' => 'found_items'];
     
     if (array_key_exists($type, $allowed_tables) && $id > 0) {
         $table = $allowed_tables[$type];
 
-        // 1. Fetch item details to get the owner student's user_id
         $stmt = mysqli_prepare($conn, "SELECT user_id, item_name FROM $table WHERE id = ?");
         mysqli_stmt_bind_param($stmt, "i", $id);
         mysqli_stmt_execute($stmt);

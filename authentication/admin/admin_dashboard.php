@@ -6,21 +6,27 @@ if (!isset($_SESSION['user_id'])) {
     exit();
 }
 
-
 if ($_SESSION['role'] != "admin") {
     header("Location: ../authentication/login.php");
     exit();
 }
 
-$fullname = $_SESSION['fullname'];
-$first_letter = strtoupper(substr(trim($fullname), 0, 1));
+header("Cache-Control: no-store, no-cache, must-revalidate, max-age=0");
+header("Cache-Control: post-check=0, pre-check=0", false);
+header("Pragma: no-cache");
+header("Expires: 0");
 
+header("X-Content-Type-Options: nosniff");
+header("X-Frame-Options: SAMEORIGIN");
+header("Referrer-Policy: strict-origin-when-cross-origin");
+
+$fullname = $_SESSION['fullname'];
 
 include '../../db.php';
 
-
 $lost_count = 0;
 $found_count = 0;
+$user_count = 0;
 
 $lost_query = mysqli_query($conn, "SELECT COUNT(*) AS total FROM lost_items");
 if ($lost_query) {
@@ -34,6 +40,12 @@ if ($found_query) {
     $found_count = (int)$found_data['total'];
 }
 
+$user_query = mysqli_query($conn, "SELECT COUNT(*) AS total FROM users");
+if ($user_query) {
+    $user_data = mysqli_fetch_assoc($user_query);
+    $user_count = (int)$user_data['total'];
+}
+
 $total_notifications = $lost_count + $found_count;
 ?>
 
@@ -44,17 +56,260 @@ $total_notifications = $lost_count + $found_count;
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin Dashboard</title>
     <link rel="stylesheet" href="dashboards.css">
+    <style>
+    
+        :root {
+            --sidebar-width: 260px;
+        }
+
+        .dashboard-wrapper {
+            display: flex;
+            min-height: 100vh;
+            position: relative;
+            background-color: #f8fafc;
+        }
+
+        .sidebar {
+            width: var(--sidebar-width);
+            background: #0f172a;
+            color: #fff;
+            display: flex;
+            flex-direction: column;
+            position: fixed;
+            top: 0;
+            bottom: 0;
+            left: 0;
+            z-index: 1000;
+            transition: transform 0.3s ease-in-out;
+        }
+
+        .main-content {
+            flex: 1;
+            margin-left: var(--sidebar-width);
+            display: flex;
+            flex-direction: column;
+            min-width: 0;
+            transition: margin-left 0.3s ease-in-out;
+        }
+
+        /* Hamburger Toggle Button para sa Mobile/Tablet */
+        .sidebar-toggle {
+            display: none;
+            background: none;
+            border: none;
+            font-size: 24px;
+            color: #1e293b;
+            cursor: pointer;
+            margin-right: 15px;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 20px;
+        }
+
+        .content-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        /* Mobile & Tablet Responsiveness */
+        @media (max-width: 1200px) {
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (max-width: 992px) {
+            .sidebar {
+                transform: translateX(-100%);
+            }
+            .sidebar.active {
+                transform: translateX(0);
+            }
+            .main-content {
+                margin-left: 0;
+            }
+            .sidebar-toggle {
+                display: block;
+            }
+            .content-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 576px) {
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+            .topbar {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 10px;
+            }
+        }
+
+        /* Overlay para sa Mobile kung naka-open ang sidebar */
+        .sidebar-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 999;
+        }
+        .sidebar-overlay.active {
+            display: block;
+        }
+
+        /* Simple dashboard display only */
+        .simple-dashboard {
+            max-width: 1100px;
+            margin: 0 auto;
+        }
+
+        .simple-dashboard-heading {
+            margin-bottom: 22px;
+        }
+
+        .simple-dashboard-heading h2 {
+            margin: 6px 0;
+            color: #1e293b;
+            font-size: 25px;
+        }
+
+        .simple-dashboard-heading p {
+            margin: 0;  
+            font-size: 14px;
+        }
+
+        .overview-panel {
+            padding: 26px;
+            background: #fff;
+            border: 1px solid #e2e8f0;
+            border-radius: 14px;
+            box-shadow: 0 4px 15px rgba(15, 23, 42, 0.03);
+        }
+
+        .overview-message {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .overview-symbol {
+            width: 52px;
+            height: 52px;
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 12px;
+            background: #dbeafe;
+            color: #2563eb;
+            font-size: 14px;
+            font-weight: 800;
+        }
+
+        .overview-message h3 {
+            margin-bottom: 6px;
+            color: #1e293b;
+            font-size: 17px;
+        }
+
+        .overview-message p {
+            max-width: 700px;
+            color: #64748b;
+            font-size: 13px;
+            line-height: 1.6;
+        }
+
+        .overview-divider {
+            height: 1px;
+            margin: 24px 0;
+            background: #e2e8f0;
+        }
+
+        .overview-stats {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 18px;
+        }
+
+        .overview-stat {
+            min-width: 0;
+            padding: 18px;
+            border: 1px solid #e2e8f0;
+            border-radius: 10px;
+            background: #f8fafc;
+        }
+
+        .overview-stat > span {
+            display: block;
+            color: #64748b;
+            font-size: 12px;
+        }
+
+        .overview-stat strong {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-top: 8px;
+            color: #0f172a;
+            font-size: 27px;
+        }
+
+        .overview-stat small {
+            display: block;
+            margin-top: 5px;
+            color: #94a3b8;
+            font-size: 11px;
+            line-height: 1.5;
+        }
+
+        .overview-stat .system-operational {
+            color: #16a34a;
+            font-size: 16px;
+        }
+
+        .overview-stat .status-dot {
+            display: inline-block;
+            flex-shrink: 0;
+        }
+
+        @media (max-width: 700px) {
+            .dashboard-body {
+                padding: 22px 16px !important;
+            }
+
+            .overview-panel {
+                padding: 18px;
+            }
+
+            .overview-stats {
+                grid-template-columns: 1fr;
+            }
+
+            .simple-dashboard-heading h2 {
+                font-size: 22px;
+            }
+        }
+    </style>
+    <link rel="stylesheet" href="../../responsive.css">
 </head>
 
-<body>
+<body class="admin-sidebar-page">
+<input type="checkbox" id="admin-menu-toggle" aria-label="Toggle navigation menu">
+<label class="mobile-sidebar-toggle" for="admin-menu-toggle" aria-label="Toggle navigation menu">☰</label>
+<label class="mobile-sidebar-overlay" for="admin-menu-toggle" aria-hidden="true"></label>
 
 <div class="dashboard-wrapper">
 
-   <aside class="sidebar">
+   <aside class="sidebar" id="sidebar">
 
     <div class="sidebar-brand">
         <div class="brand-icon">SLF</div>
-
         <div>
             <h2>Lost & Found</h2>
             <span>Administrator</span>
@@ -62,7 +317,6 @@ $total_notifications = $lost_count + $found_count;
     </div>
 
     <nav class="navigation">
-
         <a href="admin_dashboard.php" class="nav-item active">
             <span class="nav-icon">⌂</span>
             <span>Dashboard</span>
@@ -76,468 +330,91 @@ $total_notifications = $lost_count + $found_count;
         <a href="view_lost.php" class="nav-item">
             <span class="nav-icon">▣</span>
             <span>Lost Item Reports</span>
+            <?php if ($lost_count > 0): ?>
+                <span class="nav-count"><?php echo $lost_count; ?></span>
+            <?php endif; ?>
         </a>
 
         <a href="view_found.php" class="nav-item">
             <span class="nav-icon">⌕</span>
             <span>Found Item Reports</span>
+            <?php if ($found_count > 0): ?>
+                <span class="nav-count"><?php echo $found_count; ?></span>
+            <?php endif; ?>
         </a>
 
         <a href="admin_profile.php" class="nav-item">
-            <span class="nav-icon">👤</span>
+            <span class="nav-icon">○</span>
             <span>My Profile</span>
         </a>
-
     </nav>
 
     <div class="sidebar-bottom">
-        <a href="ad_logout_con.php" class="logout-link">
-            <span>↪</span>
+        <a href="../../authentication/logout.php" class="nav-item" onclick="return confirmLogout();">
+            <span class="nav-icon">↪</span>
             <span>Log Out</span>
         </a>
     </div>
 
 </aside>
-
    
     <main class="main-content">
-
         
-        <header class="topbar">
-
-            <div class="welcome-area">
-                <h1>Welcome back, <?php echo htmlspecialchars($fullname); ?> !</h1>
-                <p>Here's what's happening in your Lost & Found system.</p>
-            </div>
-
-
-            <div class="topbar-actions">
-
-                
-                <div class="dropdown-wrapper">
-
-                    <button
-                        type="button"
-                        class="icon-button"
-                        id="notificationButton"
-                        aria-label="Notifications"
-                    >
-
-                        <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            viewBox="0 0 24 24"
-                            class="bell-icon"
-                        >
-                            <path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9"/>
-                            <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
-                        </svg>
-
-                        <?php if ($total_notifications > 0): ?>
-                            <span class="notification-badge">
-                                <?php echo $total_notifications > 99 ? '99+' : $total_notifications; ?>
-                            </span>
-                        <?php endif; ?>
-
-                    </button>
-
-
-                   
-                    <div class="dropdown notification-dropdown" id="notificationDropdown">
-
-                        <div class="dropdown-header">
-                            <div>
-                                <h3>Notifications</h3>
-                                <span>Latest system activity</span>
-                            </div>
-
-                            <span class="notification-total">
-                                <?php echo $total_notifications; ?>
-                            </span>
-                        </div>
-
-
-                        <div class="notification-list">
-
-                            <?php if ($lost_count > 0): ?>
-
-                                <a href="view_lost.php" class="notification-item">
-
-                                    <div class="notification-icon lost">
-                                        !
-                                    </div>
-
-                                    <div class="notification-text">
-                                        <strong>Lost Item Reports</strong>
-                                        <p>
-                                            <?php echo $lost_count; ?>
-                                            lost report<?php echo $lost_count != 1 ? 's' : ''; ?>
-                                            available.
-                                        </p>
-                                    </div>
-
-                                </a>
-
-                            <?php endif; ?>
-
-
-                            <?php if ($found_count > 0): ?>
-
-                                <a href="view_found.php" class="notification-item">
-
-                                    <div class="notification-icon found">
-                                        ✓
-                                    </div>
-
-                                    <div class="notification-text">
-                                        <strong>Found Item Reports</strong>
-                                        <p>
-                                            <?php echo $found_count; ?>
-                                            found report<?php echo $found_count != 1 ? 's' : ''; ?>
-                                            available.
-                                        </p>
-                                    </div>
-
-                                </a>
-
-                            <?php endif; ?>
-
-
-                            <?php if ($total_notifications == 0): ?>
-
-                                <div class="empty-notification">
-
-                                    <div class="empty-icon">
-                                        ✓
-                                    </div>
-
-                                    <strong>No notifications</strong>
-
-                                    <p>
-                                        You're all caught up.
-                                    </p>
-
-                                </div>
-
-                            <?php endif; ?>
-
-                        </div>
-
-                    </div>
-
-                </div>
-
-
-                <!-- PROFILE -->
-                <div class="dropdown-wrapper">
-
-                    <button
-                        type="button"
-                        class="profile-button"
-                        id="profileButton"
-                    >
-
-                        <div class="profile-circle">
-                            <?php echo htmlspecialchars($first_letter); ?>
-                        </div>
-
-                        <div class="profile-info">
-                            <strong>
-                                <?php echo htmlspecialchars($fullname); ?>
-                            </strong>
-
-                            <span>Administrator</span>
-                        </div>
-
-                        <span class="profile-arrow">⌄</span>
-
-                    </button>
-
-
-                    <!-- PROFILE DROPDOWN -->
-                    <div class="dropdown profile-dropdown" id="profileDropdown">
-
-                        <div class="profile-dropdown-header">
-
-                            <div class="large-profile-circle">
-                                <?php echo htmlspecialchars($first_letter); ?>
-                            </div>
-
-                            <div>
-                                <strong>
-                                    <?php echo htmlspecialchars($fullname); ?>
-                                </strong>
-
-                                <span>Administrator</span>
-                            </div>
-
-                        </div>
-
-
-                        <div class="profile-menu">
-
-                            <a href="admin_profile.php">
-                                <span>👤</span>
-                                <div>
-                                    <strong>View Profile</strong>
-                                    <small>Manage your account</small>
-                                </div>
-                            </a>
-
-                            <a href="logout.php" class="profile-logout">
-                                <span>↪</span>
-                                <div>
-                                    <strong>Log Out</strong>
-                                    <small>Sign out of your account</small>
-                                </div>
-                            </a>
-
-                        </div>
-
-                    </div>
-
-                </div>
-
-            </div>
-
-        </header>
-
-
-       
+        
         <section class="dashboard-body">
-
-            <div class="page-title">
-                <div>
+            <div class="simple-dashboard">
+                <div class="simple-dashboard-heading">
                     <span class="section-label">ADMINISTRATOR ACCOUNT</span>
                     <h2>Dashboard Overview</h2>
-                    <p>Monitor and manage student lost and found reports.</p>
-                </div>
-            </div>
-
-
-            <div class="stats-grid">
-
-                <a href="view_lost.php" class="stats-card">
-
-                    <div class="stat-card-top">
-
-                        <div class="stat-icon lost-icon">
-                            !
-                        </div>
-
-                        <span class="stat-arrow">→</span>
-
-                    </div>
-
-                    <div class="stat-content">
-                        <span>Lost Item Reports</span>
-                        <strong><?php echo $lost_count; ?></strong>
-                        <small>Reported lost items</small>
-                    </div>
-
-                </a>
-
-
-                <a href="view_found.php" class="stat-card">
-
-                    <div class="stat-card-top">
-
-                        <div class="stat-icon found-icon">
-                            ✓
-                        </div>
-
-                        <span class="stat-arrow">→</span>
-
-                    </div>
-
-                    <div class="stat-content">
-                        <span>Found Item Reports</span>
-                        <strong><?php echo $found_count; ?></strong>
-                        <small>Reported found items</small>
-                    </div>
-
-                </a>
-
-
-                <div class="stat-card">
-
-                    <div class="stat-card-top">
-
-                        <div class="stat-icon notification-icon-card">
-                            🔔
-                        </div>
-
-                    </div>
-
-                    <div class="stat-content">
-                        <span>Total Reports</span>
-                        <strong><?php echo $total_notifications; ?></strong>
-                        <small>Lost and found reports</small>
-                    </div>
-
+                    <p>Welcome to your Student Lost & Found Management System.</p>
                 </div>
 
-            </div>
-
-
-            <div class="content-grid">
-
-                <div class="dashboard-panel">
-
-                    <div class="panel-header">
+                <div class="overview-panel">
+                    <div class="overview-message">
+                        <div class="overview-symbol">SLF</div>
                         <div>
-                            <h3>Quick Actions</h3>
-                            <p>Quickly access important admin functions.</p>
+                            <h3>System Overview</h3>
+                            <p>Manage lost and found reports using the navigation menu. Your report counts are also available beside Lost Item Reports and Found Item Reports.</p>
                         </div>
                     </div>
 
+                    <div class="overview-divider"></div>
 
-                    <div class="quick-actions">
-
-                        <a href="lost_item_report.php" class="quick-action">
-
-                            <div class="quick-icon">
-                                📄
-                            </div>
-
-                            <div>
-                                <strong>Lost Reports</strong>
-                                <span>View reported lost items</span>
-                            </div>
-
-                            <b>→</b>
-
-                        </a>
-
-
-                        <a href="found_item_report.php" class="quick-action">
-
-                            <div class="quick-icon">
-                                🔎
-                            </div>
-
-                            <div>
-                                <strong>Found Reports</strong>
-                                <span>View reported found items</span>
-                            </div>
-
-                            <b>→</b>
-
-                        </a>
-
-
-                        <a href="admin_profile.php" class="quick-action">
-
-                            <div class="quick-icon">
-                                👤
-                            </div>
-
-                            <div>
-                                <strong>My Profile</strong>
-                                <span>View your administrator profile</span>
-                            </div>
-
-                            <b>→</b>
-
-                        </a>
-
+                    <div class="overview-stats">
+                        <div class="overview-stat">
+                            <span>Total Reports</span>
+                            <strong><?php echo $total_notifications; ?></strong>
+                            <small>Lost and found reports combined</small>
+                        </div>
+                        <div class="overview-stat">
+                            <span>Registered Users</span>
+                            <strong><?php echo $user_count; ?></strong>
+                            <small>Accounts in the system</small>
+                        </div>
+                        <div class="overview-stat">
+                            <span>System Status</span>
+                            <strong class="system-operational"><span class="status-dot"></span> Operational</strong>
+                            <small>Dashboard is ready to use</small>
+                        </div>
                     </div>
-
                 </div>
-
-
-                <div class="dashboard-panel system-panel">
-
-                    <div class="panel-header">
-                        <div>
-                            <h3>System Status</h3>
-                            <p>Current dashboard status.</p>
-                        </div>
-                    </div>
-
-
-                    <div class="system-status">
-
-                        <div class="status-row">
-                            <span>System</span>
-                            <div class="status-value">
-                                <i class="status-dot"></i>
-                                Operational
-                            </div>
-                        </div>
-
-                        <div class="status-row">
-                            <span>Lost Reports</span>
-                            <strong><?php echo $lost_count; ?></strong>
-                        </div>
-
-                        <div class="status-row">
-                            <span>Found Reports</span>
-                            <strong><?php echo $found_count; ?></strong>
-                        </div>
-
-                    </div>
-
-                </div>
-
             </div>
-
         </section>
 
     </main>
 
 </div>
 
-
 <script>
-document.addEventListener("DOMContentLoaded", function () {
-
-    const notificationButton = document.getElementById("notificationButton");
-    const notificationDropdown = document.getElementById("notificationDropdown");
-
-    const profileButton = document.getElementById("profileButton");
-    const profileDropdown = document.getElementById("profileDropdown");
-
-
-    notificationButton.addEventListener("click", function (event) {
-
-        event.stopPropagation();
-
-        notificationDropdown.classList.toggle("show");
-
-        profileDropdown.classList.remove("show");
-
-    });
-
-
-    profileButton.addEventListener("click", function (event) {
-
-        event.stopPropagation();
-
-        profileDropdown.classList.toggle("show");
-
-        notificationDropdown.classList.remove("show");
-
-    });
-
-
-    document.addEventListener("click", function () {
-
-        notificationDropdown.classList.remove("show");
-        profileDropdown.classList.remove("show");
-
-    });
-
-
-    notificationDropdown.addEventListener("click", function (event) {
-        event.stopPropagation();
-    });
-
-
-    profileDropdown.addEventListener("click", function (event) {
-        event.stopPropagation();
-    });
-
+window.addEventListener("pageshow", function (event) {
+    if (event.persisted) {
+        window.location.reload();
+    }
 });
+
+function confirmLogout(){
+    return confirm("Are you sure you want to log out?");
+}
 </script>
 
 </body>

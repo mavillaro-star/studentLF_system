@@ -1,4 +1,3 @@
-```php
 <?php
 session_start();
 include '../../db.php';
@@ -101,19 +100,25 @@ if (isset($_POST['submit'])) {
 <html lang="en">
 
 <head>
-
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-    <title>Report Lost Item</title>
+    <title>Report Lost Item - Lost &amp; Found Portal</title>
 
     <style>
-
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
+            font-family:Arial, Helvetica, sans-serif;
+        }
+
+        :root {
+            --primary: #1d6fc5;
+            --bg-surface: #ffffff;
+            --border-color: #e3e8ee;
+            --text-main: #172033;
+            --text-muted: #8793a5;
+            --background: #f3f6fa;
         }
 
         html,
@@ -123,82 +128,71 @@ if (isset($_POST['submit'])) {
         }
 
         body {
-            background: #eef3f8;
-            color: #172033;
+            background: var(--background);
+            color: var(--text-main);
+            overflow-x: hidden;
         }
 
-        /* =========================
-           MAIN LAYOUT
-        ========================= */
+        /* MOBILE MENU */
 
-        .dashboard {
+        #menu-toggle {
+            display: none;
+        }
+
+        /* SIDEBAR - SAME DESIGN AS STUDENT DASHBOARD */
+
+        .dashboard-wrapper {
+            display: flex;
             width: 100%;
             min-height: 100vh;
-            display: flex;
         }
-
-
-        /* =========================
-           SIDEBAR
-        ========================= */
 
         .sidebar {
             position: fixed;
-            left: 0;
             top: 0;
+            left: 0;
             width: 230px;
             height: 100vh;
+            padding: 24px 16px;
             background: #111a2d;
             color: #ffffff;
             display: flex;
             flex-direction: column;
-            padding: 24px 16px;
-            z-index: 100;
             border-right: 1px solid #1f2b43;
+            overflow-y: auto;
+            z-index: 200;
         }
 
-        .brand {
+        .sidebar-brand {
             display: flex;
             align-items: center;
             gap: 12px;
             padding: 2px 8px 25px;
-            border-bottom: 1px solid #26334c;
             margin-bottom: 22px;
+            border-bottom: 1px solid #26334c;
+            text-decoration: none;
+            color: #ffffff;
         }
 
-        .brand-mark {
+        .brand-icon {
             width: 42px;
             height: 42px;
+            flex-shrink: 0;
             border-radius: 12px;
-            background: #1d2a44;
+            background: #2563eb;
             display: flex;
             align-items: center;
             justify-content: center;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .brand-mark::before {
-            content: "";
-            width: 18px;
-            height: 18px;
-            border: 2px solid #4da3ff;
-            border-radius: 50%;
-            position: absolute;
-        }
-
-        .brand-mark::after {
-            content: "";
-            width: 24px;
-            height: 2px;
-            background: #4da3ff;
-            transform: rotate(-45deg);
-            position: absolute;
+            color: #ffffff;
+            font-size: 13px;
+            font-weight: 800;
+            letter-spacing: 1px;
         }
 
         .brand-text {
             display: flex;
             flex-direction: column;
+            min-width: 0;
         }
 
         .brand-text strong {
@@ -214,11 +208,6 @@ if (isset($_POST['submit'])) {
             letter-spacing: .5px;
         }
 
-
-        /* =========================
-           NAVIGATION
-        ========================= */
-
         .nav-title {
             font-size: 9px;
             text-transform: uppercase;
@@ -228,15 +217,14 @@ if (isset($_POST['submit'])) {
             margin-bottom: 9px;
         }
 
-        .nav-menu {
-            list-style: none;
+        .navigation {
             display: flex;
             flex-direction: column;
             gap: 5px;
         }
 
         .nav-item {
-            height: 44px;
+            min-height: 44px;
             display: flex;
             align-items: center;
             gap: 12px;
@@ -258,7 +246,7 @@ if (isset($_POST['submit'])) {
             align-items: center;
             justify-content: center;
             background: #19253c;
-            font-size: 13px;
+            font-size: 14px;
             flex-shrink: 0;
         }
 
@@ -310,132 +298,98 @@ if (isset($_POST['submit'])) {
             color: #ff7f7f;
         }
 
+        /* MOBILE MENU BUTTON AND OVERLAY */
 
-        /* =========================
-           MAIN CONTENT
-        ========================= */
-
-        .main-content {
-            margin-left: 230px;
-            width: calc(100% - 230px);
-            min-height: 100vh;
-            background: #f3f6fa;
+        .mobile-menu-btn {
+            display: none;
+            width: 38px;
+            height: 38px;
+            border: 1px solid #e2e7ed;
+            border-radius: 10px;
+            background: #ffffff;
+            cursor: pointer;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            gap: 4px;
+            flex-shrink: 0;
         }
 
+        .mobile-menu-btn span {
+            width: 17px;
+            height: 2px;
+            background: #172033;
+            border-radius: 5px;
+        }
 
-        /* =========================
-           TOP HEADER
-        ========================= */
+        .menu-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(8, 15, 28, .45);
+            opacity: 0;
+            visibility: hidden;
+            transition: .25s ease;
+            z-index: 150;
+            cursor: pointer;
+        }
 
-        .topbar {
-            min-height: 74px;
-            background: #ffffff;
-            border-bottom: 1px solid #e4e9ef;
+        /* MAIN WORKSPACE */
+
+        .main-wrapper {
+            flex-grow: 1;
             display: flex;
-            align-items: center;
+            flex-direction: column;
+            min-width: 0;
+            width: calc(100% - 230px);
+            min-height: 100vh;
+            margin-left: 230px;
+        }
+
+        /* TOP HEADER - SAME DESIGN AS STUDENT DASHBOARD */
+
+        .top-header {
+            min-height: 74px;
+            display: flex;
             justify-content: space-between;
-            padding: 0 30px;
+            align-items: center;
+            gap: 15px;
+            padding: 12px 30px;
+            background: var(--bg-surface);
+            border-bottom: 1px solid var(--border-color);
             position: sticky;
             top: 0;
             z-index: 50;
         }
 
-        .topbar-left h1 {
-            font-size: 19px;
-            color: #172033;
-            font-weight: 750;
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            min-width: 0;
         }
 
-        .topbar-left p {
+        .header-title {
+            min-width: 0;
+        }
+
+        .header-title h1 {
+            font-size: 19px;
+            font-weight: 750;
+            color: var(--text-main);
+            line-height: 1.4;
+        }
+
+        .header-title p {
             font-size: 11px;
-            color: #8793a5;
+            color: var(--text-muted);
             margin-top: 3px;
         }
 
-        .user-area {
-            display: flex;
-            align-items: center;
-            gap: 14px;
-        }
-
-        .notification {
-            width: 35px;
-            height: 35px;
-            border: 1px solid #e2e7ed;
-            border-radius: 10px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            background: #ffffff;
-            color: #64748b;
-            font-size: 14px;
-            position: relative;
-        }
-
-        .notification::after {
-            content: "";
-            width: 6px;
-            height: 6px;
-            border-radius: 50%;
-            background: #ff5c5c;
-            position: absolute;
-            top: 7px;
-            right: 7px;
-            border: 2px solid #ffffff;
-        }
-
-        .user-divider {
-            height: 32px;
-            width: 1px;
-            background: #e3e8ee;
-        }
-
-        .user-info {
-            text-align: right;
-        }
-
-        .user-name {
-            display: block;
-            font-size: 12px;
-            font-weight: 700;
-            color: #172033;
-        }
-
-        .user-role {
-            display: block;
-            font-size: 10px;
-            color: #8b96a7;
-            margin-top: 2px;
-        }
-
-        .avatar {
-            width: 37px;
-            height: 37px;
-            border-radius: 11px;
-            background: #1d6fc5;
-            color: #ffffff;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 14px;
-            font-weight: 700;
-            box-shadow: 0 4px 10px rgba(29, 111, 197, .18);
-        }
-
-
-        /* =========================
-           PAGE CONTENT
-        ========================= */
-
-        .page-content {
+        .content-body {
             padding: 28px 30px 35px;
             width: 100%;
         }
-
-
-        /* =========================
-           PAGE INTRO
-        ========================= */
 
         .page-intro {
             margin-bottom: 20px;
@@ -444,31 +398,27 @@ if (isset($_POST['submit'])) {
         .page-intro h2 {
             font-size: 21px;
             font-weight: 750;
-            color: #172033;
+            color: #0f172a;
         }
 
         .page-intro p {
             font-size: 11px;
-            color: #8793a5;
+            color: #64748b;
             margin-top: 5px;
         }
 
-
-        /* =========================
-           REPORT CARD
-        ========================= */
-
         .report-card {
             background: #ffffff;
-            border: 1px solid #e5eaf0;
-            border-radius: 15px;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
             overflow: hidden;
             max-width: 1000px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, .04);
         }
 
         .report-header {
             padding: 20px 22px;
-            border-bottom: 1px solid #e8edf2;
+            border-bottom: 1px solid #f1f5f9;
             display: flex;
             align-items: center;
             gap: 13px;
@@ -477,9 +427,9 @@ if (isset($_POST['submit'])) {
         .report-header-icon {
             width: 42px;
             height: 42px;
-            border-radius: 11px;
-            background: #fff0f0;
-            color: #f05252;
+            border-radius: 10px;
+            background: #fef2f2;
+            color: #ef4444;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -489,20 +439,15 @@ if (isset($_POST['submit'])) {
 
         .report-header-text h3 {
             font-size: 14px;
-            color: #172033;
+            color: #0f172a;
             font-weight: 750;
         }
 
         .report-header-text p {
             font-size: 10px;
-            color: #8b96a7;
+            color: #64748b;
             margin-top: 3px;
         }
-
-
-        /* =========================
-           FORM
-        ========================= */
 
         .report-form {
             padding: 24px 22px 22px;
@@ -517,6 +462,7 @@ if (isset($_POST['submit'])) {
         .form-group {
             display: flex;
             flex-direction: column;
+            min-width: 0;
         }
 
         .form-group.full {
@@ -526,22 +472,22 @@ if (isset($_POST['submit'])) {
         .form-group label {
             font-size: 10px;
             font-weight: 700;
-            color: #344054;
+            color: #334155;
             margin-bottom: 7px;
         }
 
         .required {
-            color: #f05252;
+            color: #ef4444;
         }
 
         .form-group input,
         .form-group textarea {
             width: 100%;
-            border: 1px solid #dfe5ec;
-            background: #fafbfd;
-            border-radius: 9px;
+            border: 1px solid #cbd5e1;
+            background: #f8fafc;
+            border-radius: 8px;
             padding: 11px 12px;
-            color: #172033;
+            color: #0f172a;
             font-family: inherit;
             font-size: 11px;
             outline: none;
@@ -558,27 +504,17 @@ if (isset($_POST['submit'])) {
             line-height: 1.5;
         }
 
-        .form-group input::placeholder,
-        .form-group textarea::placeholder {
-            color: #a4adba;
-        }
-
         .form-group input:focus,
         .form-group textarea:focus {
             background: #ffffff;
-            border-color: #4da3ff;
-            box-shadow: 0 0 0 3px rgba(77, 163, 255, .08);
+            border-color: #2563eb;
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, .1);
         }
 
-
-        /* =========================
-           FILE UPLOAD
-        ========================= */
-
         .file-upload {
-            border: 1px dashed #cfd7e1;
-            background: #fafbfd;
-            border-radius: 9px;
+            border: 1px dashed #cbd5e1;
+            background: #f8fafc;
+            border-radius: 8px;
             padding: 14px;
         }
 
@@ -590,55 +526,36 @@ if (isset($_POST['submit'])) {
             box-shadow: none;
         }
 
-        .file-upload input:focus {
-            box-shadow: none;
-        }
-
         .file-note {
             font-size: 9px;
-            color: #9aa5b4;
+            color: #64748b;
             margin-top: 7px;
         }
-
-
-        /* =========================
-           INFORMATION BOX
-        ========================= */
 
         .form-info {
             margin-top: 19px;
             padding: 12px 14px;
-            border-radius: 9px;
-            background: #f3f8fd;
-            border: 1px solid #dceaf7;
-            color: #718096;
-            font-size: 9px;
+            border-radius: 8px;
+            background: #eff6ff;
+            border: 1px solid #dbeafe;
+            color: #1e40af;
+            font-size: 10px;
             line-height: 1.6;
         }
 
         .form-info strong {
-            color: #4a6480;
+            color: #1e3a8a;
         }
-
-
-        /* =========================
-           ERROR MESSAGE
-        ========================= */
 
         .error-message {
             margin-bottom: 18px;
             padding: 11px 13px;
             border-radius: 8px;
-            background: #fff0f0;
-            border: 1px solid #ffd4d4;
-            color: #d04444;
+            background: #fef2f2;
+            border: 1px solid #fca5a5;
+            color: #991b1b;
             font-size: 10px;
         }
-
-
-        /* =========================
-           FORM BUTTONS
-        ========================= */
 
         .form-actions {
             display: flex;
@@ -646,7 +563,7 @@ if (isset($_POST['submit'])) {
             gap: 9px;
             margin-top: 22px;
             padding-top: 19px;
-            border-top: 1px solid #edf0f4;
+            border-top: 1px solid #f1f5f9;
         }
 
         .form-btn {
@@ -659,7 +576,7 @@ if (isset($_POST['submit'])) {
             justify-content: center;
             gap: 7px;
             font-family: inherit;
-            font-size: 10px;
+            font-size: 11px;
             font-weight: 700;
             text-decoration: none;
             cursor: pointer;
@@ -667,127 +584,101 @@ if (isset($_POST['submit'])) {
         }
 
         .cancel-btn {
-            background: #edf1f5;
-            color: #657184;
+            background: #f1f5f9;
+            color: #475569;
         }
 
         .cancel-btn:hover {
-            background: #e2e7ed;
+            background: #e2e8f0;
         }
 
         .submit-btn {
-            background: #ff5f61;
+            background: #ef4444;
             color: #ffffff;
         }
 
         .submit-btn:hover {
-            background: #ed4d50;
+            background: #dc2626;
             transform: translateY(-1px);
         }
 
-
-        /* =========================
-           RESPONSIVE
-        ========================= */
+        /* TABLET */
 
         @media screen and (max-width: 1000px) {
-
             .sidebar {
                 width: 205px;
             }
 
-            .main-content {
-                margin-left: 205px;
+            .main-wrapper {
                 width: calc(100% - 205px);
+                margin-left: 205px;
             }
 
-            .page-content {
+            .top-header {
+                padding: 12px 23px;
+            }
+
+            .content-body {
                 padding: 23px;
             }
         }
 
 
         @media screen and (max-width: 760px) {
-
-            body {
-                overflow: auto;
-            }
-
-            .dashboard {
-                min-height: 100vh;
-                height: auto;
+            .dashboard-wrapper {
                 display: block;
             }
 
             .sidebar {
-                position: relative;
+                width: 270px;
+                max-width: 85vw;
+                transform: translateX(-100%);
+                transition: transform .25s ease;
+                box-shadow: 8px 0 25px rgba(0, 0, 0, .18);
+                z-index: 200;
+            }
+
+            #menu-toggle:checked ~ .dashboard-wrapper .sidebar {
+                transform: translateX(0);
+            }
+
+            #menu-toggle:checked ~ .menu-overlay {
+                opacity: 1;
+                visibility: visible;
+            }
+
+            .menu-overlay {
+                display: block;
+            }
+
+            .mobile-menu-btn {
+                display: flex;
+            }
+
+            .main-wrapper {
                 width: 100%;
-                height: auto;
-                min-height: auto;
-                padding: 15px;
-                border-right: none;
-                border-bottom: 1px solid #26334c;
-            }
-
-            .brand {
-                margin-bottom: 13px;
-                padding-bottom: 13px;
-            }
-
-            .nav-title {
-                display: none;
-            }
-
-            .nav-menu {
-                display: grid;
-                grid-template-columns: repeat(2, 1fr);
-                gap: 5px;
-            }
-
-            .nav-item {
-                height: 40px;
-            }
-
-            .sidebar-bottom {
-                margin-top: 10px;
-                padding-top: 10px;
-            }
-
-            .main-content {
                 margin-left: 0;
-                width: 100%;
-                min-height: calc(100vh - 230px);
             }
 
-            .topbar {
-                padding: 0 17px;
+            .top-header {
                 min-height: 65px;
+                padding: 10px 17px;
             }
 
-            .topbar-left h1 {
+            .header-title h1 {
                 font-size: 16px;
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
             }
 
-            .topbar-left p {
+            .header-title p {
                 display: none;
             }
 
-            .user-info,
-            .user-divider {
-                display: none;
+            .content-body {
+                padding: 20px 17px 30px;
             }
-
-            .page-content {
-                padding: 18px;
-            }
-
-            .report-card {
-                max-width: 100%;
-            }
-        }
-
-
-        @media screen and (max-width: 600px) {
 
             .form-grid {
                 grid-template-columns: 1fr;
@@ -796,161 +687,109 @@ if (isset($_POST['submit'])) {
             .form-group.full {
                 grid-column: auto;
             }
-
-            .page-intro h2 {
-                font-size: 19px;
-            }
-
-            .report-form {
-                padding: 20px 18px;
-            }
-
-            .report-header {
-                padding: 18px;
-            }
-
-            .form-actions {
-                flex-direction: column-reverse;
-            }
-
-            .form-btn {
-                width: 100%;
-            }
         }
 
-
         @media screen and (max-width: 430px) {
-
-            .brand {
-                justify-content: center;
+            .top-header {
+                padding: 10px 13px;
+                gap: 8px;
             }
 
-            .nav-menu {
-                grid-template-columns: 1fr;
+            .header-title h1 {
+                font-size: 14px;
             }
 
-            .page-content {
-                padding: 14px;
-            }
-
-            .page-intro {
-                margin-bottom: 15px;
-            }
-
-            .page-intro h2 {
-                font-size: 18px;
-            }
-
-            .report-card {
-                border-radius: 12px;
+            .content-body {
+                padding: 17px 13px 25px;
             }
 
             .report-header {
                 padding: 16px;
             }
 
-            .report-header-icon {
-                width: 38px;
-                height: 38px;
+            .report-form {
+                padding: 18px 16px;
             }
 
-            .report-form {
-                padding: 17px 15px;
+            .page-intro h2 {
+                font-size: 19px;
+            }
+
+            .form-actions {
+                flex-wrap: wrap;
+            }
+
+            .form-btn {
+                padding: 0 12px;
             }
         }
 
-    </style>
+        @media screen and (max-width: 350px) {
+            
+            .mobile-menu-btn {
+                width: 34px;
+                height: 34px;
+            }
 
+            .header-left {
+                gap: 7px;
+            }
+
+            .header-title h1 {
+                font-size: 12px;
+            }
+        }
+    </style>
+    <link rel="stylesheet" href="../../responsive.css">
 </head>
 
 <body>
 
-<div class="dashboard">
+<input type="checkbox" id="menu-toggle">
 
-
-    <!-- ================= SIDEBAR ================= -->
+<div class="dashboard-wrapper">
 
     <aside class="sidebar">
 
-        <a href="students.php"
-           style="text-decoration:none; color:inherit;">
+        <a class="sidebar-brand">
+            <div class="brand-icon">SLF</div>
 
-            <div class="brand">
-
-                <div class="brand-mark"></div>
-
-                <div class="brand-text">
-                    <strong>LOST &amp; FOUND</strong>
-                    <span>STUDENT PORTAL</span>
-                </div>
-
+            <div class="brand-text">
+                <strong>LOST &amp; FOUND</strong>
+                <span>STUDENT PORTAL</span>
             </div>
-
         </a>
 
+        <div class="nav-title">Main Menu</div>
 
-        <div class="nav-title">
-            Main Menu
-        </div>
+        <nav class="navigation">
 
+            <a href="student_dashboard.php" class="nav-item">
+                <span class="nav-icon">⌂</span>
+                <span>Dashboard</span>
+            </a>
 
-        <ul class="nav-menu">
+            <a href="report_lost.php" class="nav-item nav-lost active">
+                <span class="nav-icon">⌕</span>
+                <span>Report Lost Item</span>
+            </a>
 
-            <li>
-                <a href="students.php" class="nav-item">
+            <a href="report_found.php" class="nav-item nav-found">
+                <span class="nav-icon">□</span>
+                <span>Report Found Item</span>
+            </a>
 
-                    <span class="nav-icon">⌂</span>
-                    <span>Dashboard</span>
+            <a href="my_reports.php" class="nav-item">
+                <span class="nav-icon">▤</span>
+                <span>My Reports</span>
+            </a>
 
-                </a>
-            </li>
+            <a href="profile.php" class="nav-item">
+                <span class="nav-icon">○</span>
+                <span>Profile</span>
+            </a>
 
-
-            <li>
-                <a href="report_lost.php"
-                   class="nav-item nav-lost active">
-
-                    <span class="nav-icon">⌕</span>
-                    <span>Report Lost Item</span>
-
-                </a>
-            </li>
-
-
-            <li>
-                <a href="report_found.php"
-                   class="nav-item nav-found">
-
-                    <span class="nav-icon">□</span>
-                    <span>Report Found Item</span>
-
-                </a>
-            </li>
-
-
-            <li>
-                <a href="my_reports.php"
-                   class="nav-item">
-
-                    <span class="nav-icon">▤</span>
-                    <span>My Reports</span>
-
-                </a>
-            </li>
-
-
-            <li>
-                <a href="profile.php"
-                   class="nav-item">
-
-                    <span class="nav-icon">○</span>
-                    <span>Profile</span>
-
-                </a>
-            </li>
-
-        </ul>
-
+        </nav>
 
         <div class="sidebar-bottom">
 
@@ -967,260 +806,98 @@ if (isset($_POST['submit'])) {
 
     </aside>
 
+    <label for="menu-toggle" class="menu-overlay"></label>
 
+    <main class="main-wrapper">
 
-    <!-- ================= MAIN CONTENT ================= -->
+        <header class="top-header">
 
-    <main class="main-content">
+            <div class="header-left">
 
+                <label for="menu-toggle"
+                       class="mobile-menu-btn"
+                       aria-label="Open navigation menu">
 
-        <!-- ================= TOP BAR ================= -->
+                    <span></span>
+                    <span></span>
+                    <span></span>
 
-        <header class="topbar">
+                </label>
 
-            <div class="topbar-left">
-
-                <h1>Report Lost Item</h1>
-
-                <p>
-                    Submit information about an item you have lost.
-                </p>
-
-            </div>
-
-
-            <div class="user-area">
-
-                <div class="notification">
-                    ♢
-                </div>
-
-
-                <div class="user-divider"></div>
-
-
-                <div class="user-info">
-
-                    <span class="user-name">
-                        <?php echo htmlspecialchars($fullname); ?>
-                    </span>
-
-                    <span class="user-role">
-                        Student Account
-                    </span>
-
-                </div>
-
-
-                <div class="avatar">
-
-                    <?php
-                    echo strtoupper(substr($fullname, 0, 1));
-                    ?>
-
+                <div class="header-title">
+                    <h1>Report Lost Item</h1>
+                    <p>Submit information about an item you have lost.</p>
                 </div>
 
             </div>
-
         </header>
 
-
-
-        <!-- ================= PAGE CONTENT ================= -->
-
-        <div class="page-content">
-
-
-            <!-- PAGE INTRO -->
-
-            <div class="page-intro">
-
-                <h2>
-                    Report a Lost Item
-                </h2>
-
-                <p>
-                    Provide accurate details so the item can be identified
-                    and matched if it is found.
-                </p>
-
-            </div>
+        <div class="content-body">
 
             <section class="report-card">
 
-
-                <!-- CARD HEADER -->
-
                 <div class="report-header">
-
-                    <div class="report-header-icon">
-                        !
-                    </div>
+                    <div class="report-header-icon">!</div>
 
                     <div class="report-header-text">
-
-                        <h3>
-                            Lost Item Information
-                        </h3>
-
-                        <p>
-                            Fill in the required information below.
-                        </p>
-
+                        <h3>Lost Item Information</h3>
+                        <p>Fill in the required information below.</p>
                     </div>
-
                 </div>
 
-                <form method="POST"
-                      enctype="multipart/form-data"
-                      class="report-form">
-
+                <form method="POST" enctype="multipart/form-data" class="report-form">
 
                     <?php if (!empty($message)) { ?>
-
                         <div class="error-message">
-
-                            <?php
-                            echo htmlspecialchars($message);
-                            ?>
-
+                            <?php echo htmlspecialchars($message); ?>
                         </div>
-
                     <?php } ?>
-
-
 
                     <div class="form-grid">
 
                         <div class="form-group">
-
-                            <label>
-                                Item Name
-                                <span class="required">*</span>
-                            </label>
-
-                            <input
-                                type="text"
-                                name="item_name"
-                                placeholder="Example: Black Wallet"
-                                required
-                            >
-
+                            <label>Item Name <span class="required">*</span></label>
+                            <input type="text" name="item_name" placeholder="Example: Black Wallet" required>
                         </div>
 
                         <div class="form-group">
-
-                            <label>
-                                Date Lost
-                                <span class="required">*</span>
-                            </label>
-
-                            <input
-                                type="date"
-                                name="date_lost"
-                                max="<?php echo date('Y-m-d'); ?>"
-                                required
-                            >
-
+                            <label>Date Lost <span class="required">*</span></label>
+                            <input type="date" name="date_lost" max="<?php echo date('Y-m-d'); ?>" required>
                         </div>
 
                         <div class="form-group full">
-
-                            <label>
-                                Location Lost
-                                <span class="required">*</span>
-                            </label>
-
-                            <input
-                                type="text"
-                                name="location_lost"
-                                placeholder="Example: Library, Room 204, Cafeteria"
-                                required
-                            >
-
-                        </div>
-
-
-                        <div class="form-group full">
-
-                            <label>
-                                Description
-                                <span class="required">*</span>
-                            </label>
-
-                            <textarea
-                                name="description"
-                                placeholder="Describe the item's color, brand, size, design, markings, or other identifying details."
-                                required
-                            ></textarea>
-
+                            <label>Location Lost <span class="required">*</span></label>
+                            <input type="text" name="location_lost" placeholder="Example: Library, Room 204, Cafeteria" required>
                         </div>
 
                         <div class="form-group full">
+                            <label>Description <span class="required">*</span></label>
+                            <textarea name="description" placeholder="Describe the item's color, brand, size, design, markings, or other identifying details." required></textarea>
+                        </div>
 
-                            <label>
-                                Upload Image
-                                <span style="color:#9aa5b4;">
-                                    (Optional)
-                                </span>
-                            </label>
+                        <div class="form-group full">
+                            <label>Upload Image <span style="color:#64748b;">(Optional)</span></label>
 
                             <div class="file-upload">
-
-                                <input
-                                    type="file"
-                                    name="image"
-                                    accept="image/*"
-                                >
-
-                                <div class="file-note">
-                                    Upload a clear image of the lost item if available.
-                                </div>
-
+                                <input type="file" name="image" accept="image/*">
+                                <div class="file-note">Upload a clear image of the lost item if available.</div>
                             </div>
-
                         </div>
 
-
                     </div>
-
 
                     <div class="form-info">
-
-                        <strong>Important:</strong>
-                        Please provide truthful and accurate information.
-                        Your report will be reviewed by the administrator
-                        and will appear in your My Reports section after submission.
-
+                        <strong>Important:</strong> Please provide truthful and accurate information. Your report will be reviewed by the administrator and will appear in your My Reports section after submission.
                     </div>
-
 
                     <div class="form-actions">
-
-                        <a href="students.php"
-                           class="form-btn cancel-btn">
-
-                            Cancel
-
-                        </a>
-
-
-                        <button
-                            type="submit"
-                            name="submit"
-                            class="form-btn submit-btn">
-
-                            Submit Report
-
-                        </button>
-
+                        <a href="student_dashboard.php" class="form-btn cancel-btn">Cancel</a>
+                        <button type="submit" name="submit" class="form-btn submit-btn">Submit Report</button>
                     </div>
-
 
                 </form>
 
             </section>
-
 
         </div>
 
@@ -1228,18 +905,11 @@ if (isset($_POST['submit'])) {
 
 </div>
 
-
-
 <script>
-
 function confirmLogout() {
-
-    return confirm(
-        "Are you sure you want to log out?"
-    );
-
+    return confirm("Are you sure you want to log out?");
 }
-
 </script>
+
 </body>
 </html>
